@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Existing Students Exam Form Fillup</title>
+    <!-- Tailwind CSS for mobile layout & styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2canvas for receipt download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F7;
+            color: #1D1D1F;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .liquid-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        }
+        .receipt-font {
+            font-family: 'Courier Prime', monospace;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="w-full bg-white/85 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100">
+        <div class="px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-semibold shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-graduation-cap text-xs"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-semibold tracking-tight text-gray-900">Exam Form Fillup</h1>
+                </div>
+            </div>
+            <div id="connectionStatus" class="flex items-center space-x-1.5 text-[11px] font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                <span id="statusText">Connecting</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full px-4 py-5 flex-grow space-y-5">
+
+        <!-- SCREEN 1: Choose School Name -->
+        <section id="screen1" class="liquid-card rounded-3xl p-6 space-y-5 shadow-xl">
+            <div class="text-center space-y-1">
+                <h2 class="text-lg font-bold tracking-tight text-gray-900">Select Institution</h2>
+                <p class="text-xs text-gray-500">Choose your school to start exam form fillup</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Institution Name</label>
+                    <div class="relative">
+                        <select id="schoolSelect" class="w-full bg-gray-50/90 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none">
+                            <option value="" disabled selected>Choose institution...</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="loadSchoolStudents()" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-3.5 px-6 rounded-2xl shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center space-x-2 text-xs">
+                        <span>Continue</span>
+                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden flex flex-col items-center justify-center py-16 space-y-3">
+            <div class="w-7 h-7 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-[11px] text-gray-500 font-medium">Loading student database...</p>
+        </div>
+
+        <!-- SCREEN 2: Search Students Name -->
+        <section id="screen2" class="hidden space-y-4">
+            <div class="liquid-card rounded-2xl p-3.5 flex items-center justify-between">
+                <button onclick="goBackToScreen(1)" class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl flex items-center space-x-1">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>School</span>
+                </button>
+                <span id="displaySelectedSchool" class="text-[11px] font-bold text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg truncate max-w-[200px]"></span>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
+                    <i class="fa-solid fa-search text-xs"></i>
+                </span>
+                <input type="text" id="searchInput" oninput="filterStudents()" placeholder="Type full first name..." class="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm">
+            </div>
+
+            <p id="searchInstruction" class="text-center text-[11px] text-gray-400 py-4">Please type the full first name of the student...</p>
+
+            <!-- Students List Results -->
+            <div id="studentsGrid" class="flex flex-col gap-2.5"></div>
+        </section>
+
+        <!-- SCREEN 3: Profile & Edit Details -->
+        <section id="screen3" class="hidden space-y-4">
+            <div class="liquid-card rounded-2xl p-3.5 flex items-center justify-between">
+                <button onclick="goBackToScreen(2)" class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl flex items-center space-x-1">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Search</span>
+                </button>
+                <span class="text-[11px] font-bold text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg">Student Profile</span>
+            </div>
+
+            <div class="liquid-card rounded-3xl p-5 space-y-4 text-center">
+                <div id="profilePhotoContainer" class="w-24 h-24 rounded-2xl bg-gray-100 mx-auto overflow-hidden shadow-md border border-gray-200 flex items-center justify-center">
+                    <i class="fa-solid fa-user text-2xl text-gray-300"></i>
+                </div>
+                <div>
+                    <span id="profileRegId" class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">--</span>
+                </div>
+
+                <form id="studentEditForm" onsubmit="proceedToPayment(event)" class="space-y-4 text-left text-xs">
+                    
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Registration ID</label>
+                        <input type="text" id="editRegId" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Institution</label>
+                        <input type="text" id="editInstitution" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-gray-700">Student Name</label>
+                            <button type="button" onclick="toggleFieldEdit('editStudentName', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
+                        </div>
+                        <input type="text" id="editStudentName" readonly required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-gray-700">Father's Name</label>
+                            <div class="flex items-center space-x-2">
+                                <div class="inline-flex rounded-lg bg-gray-200 p-0.5 text-[10px] font-bold">
+                                    <button type="button" id="fatherAliveBtn" onclick="setParentStatus('father', 'alive')" class="px-2 py-0.5 rounded-md bg-white text-gray-800 shadow-sm transition-all">Alive</button>
+                                    <button type="button" id="fatherLateBtn" onclick="setParentStatus('father', 'late')" class="px-2 py-0.5 rounded-md text-gray-500 transition-all">Late</button>
+                                </div>
+                                <button type="button" onclick="toggleFieldEdit('editFatherName', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
+                            </div>
+                        </div>
+                        <input type="text" id="editFatherName" readonly required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-gray-700">Mother's Name</label>
+                            <div class="flex items-center space-x-2">
+                                <div class="inline-flex rounded-lg bg-gray-200 p-0.5 text-[10px] font-bold">
+                                    <button type="button" id="motherAliveBtn" onclick="setParentStatus('mother', 'alive')" class="px-2 py-0.5 rounded-md bg-white text-gray-800 shadow-sm transition-all">Alive</button>
+                                    <button type="button" id="motherLateBtn" onclick="setParentStatus('mother', 'late')" class="px-2 py-0.5 rounded-md text-gray-500 transition-all">Late</button>
+                                </div>
+                                <button type="button" onclick="toggleFieldEdit('editMotherName', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
+                            </div>
+                        </div>
+                        <input type="text" id="editMotherName" readonly required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-gray-700">Address</label>
+                            <button type="button" onclick="toggleFieldEdit('editAddress', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
+                        </div>
+                        <input type="text" id="editAddress" readonly required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-gray-700">Pincode (6 Digits)</label>
+                            <button type="button" onclick="toggleFieldEdit('editPincode', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
+                        </div>
+                        <input type="text" id="editPincode" readonly required maxlength="6" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 6);" class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-gray-700">Mobile (WhatsApp - 10 Digits)</label>
+                            <button type="button" onclick="toggleFieldEdit('editMobile', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
+                        </div>
+                        <input type="text" id="editMobile" readonly required maxlength="10" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 10);" class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Nationality</label>
+                        <input type="text" id="editNationality" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Mother Tongue</label>
+                        <input type="text" id="editMotherTongue" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Date of Birth</label>
+                        <input type="text" id="editDob" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Age</label>
+                        <input type="text" id="editAge" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Sex</label>
+                        <input type="text" id="editSex" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Educational Qualification <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <select id="editEduQualification" required class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none">
+                                <option value="" disabled selected>Select Class...</option>
+                                <option value="Below Class I">Below Class I</option>
+                                <option value="Class I">Class I</option>
+                                <option value="Class II">Class II</option>
+                                <option value="Class III">Class III</option>
+                                <option value="Class IV">Class IV</option>
+                                <option value="Class V">Class V</option>
+                                <option value="Class VI">Class VI</option>
+                                <option value="Class VII">Class VII</option>
+                                <option value="Class VIII">Class VIII</option>
+                                <option value="Class IX">Class IX</option>
+                                <option value="Class X (Secondary / Matriculation)">Class X (Secondary / Matriculation)</option>
+                                <option value="Class XI">Class XI</option>
+                                <option value="Class XII (Higher Secondary / Senior Secondary)">Class XII (Higher Secondary / Senior Secondary)</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Subject</label>
+                        <input type="text" id="editSubject" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-400 mb-1">Appearing Fine Arts Class</label>
+                        <input type="text" id="editFineArtsClass" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
+                    </div>
+
+                    <div id="visharadUploadSection" class="hidden space-y-3.5 pt-3 border-t border-dashed border-gray-200">
+                        <div class="bg-blue-50/60 p-2.5 rounded-xl text-blue-800 text-[11px] font-medium">
+                            <i class="fa-solid fa-circle-info mr-1"></i> Additional documents required for this Fine Arts class.
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Upload Class 10th/11th/12th Marksheet <span class="text-rose-500">*</span></label>
+                            <input type="file" id="uploadMarksheet" accept="image/*,.pdf" class="w-full text-[11px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-gray-700 mb-1">Upload Aadhar Card <span class="text-rose-500">*</span></label>
+                            <input type="file" id="uploadAadhar" accept="image/*,.pdf" class="w-full text-[11px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700">
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-3.5 px-6 rounded-2xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center space-x-2 text-xs">
+                            <span>Proceed to Payment</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: Payment Option & QR Code -->
+        <section id="screen4" class="hidden space-y-4">
+            <div class="liquid-card rounded-2xl p-3.5 flex items-center justify-between">
+                <button onclick="goBackToScreen(3)" class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl flex items-center space-x-1">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Profile</span>
+                </button>
+                <span class="text-[11px] font-bold text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg">Fee Payment</span>
+            </div>
+
+            <div class="liquid-card rounded-3xl p-6 space-y-5 text-center shadow-xl">
+                <div class="space-y-0.5">
+                    <h2 class="text-base font-bold text-gray-900">Scan & Pay Exam Fee</h2>
+                    <p class="text-[11px] text-gray-500">UPI ID: sdarpan128@oksbi</p>
+                </div>
+
+                <div class="bg-blue-50/70 border border-blue-100 rounded-2xl p-3 flex items-center justify-between text-xs">
+                    <span class="text-gray-500 font-semibold">Amount:</span>
+                    <span id="payDisplayFee" class="text-lg font-black text-blue-600">₹0</span>
+                </div>
+
+                <!-- QR Code -->
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 inline-block">
+                    <img id="qrCodeImage" src="" alt="QR Code" class="w-40 h-40 object-contain mx-auto">
+                </div>
+                <p class="text-[10px] text-gray-400">Default Remarks: <span id="qrDefaultRemarks" class="font-semibold text-gray-600">--</span></p>
+
+                <!-- Direct UPI App Payment Buttons -->
+                <div class="space-y-2 pt-2 border-t border-gray-100">
+                    <p class="text-[11px] font-semibold text-gray-500 text-left mb-1">Pay Directly via UPI Apps:</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <a id="gpayBtn" href="#" target="_blank" class="flex flex-col items-center justify-center bg-white border border-gray-200 hover:bg-gray-50 p-2.5 rounded-xl shadow-xs transition-all text-xs font-semibold text-gray-800 space-y-1">
+                            <i class="fa-brands fa-google-pay text-lg text-blue-600"></i>
+                            <span class="text-[10px]">Google Pay</span>
+                        </a>
+                        <a id="phonepeBtn" href="#" target="_blank" class="flex flex-col items-center justify-center bg-white border border-gray-200 hover:bg-gray-50 p-2.5 rounded-xl shadow-xs transition-all text-xs font-semibold text-gray-800 space-y-1">
+                            <i class="fa-solid fa-mobile-screen-button text-lg text-purple-600"></i>
+                            <span class="text-[10px]">PhonePe</span>
+                        </a>
+                        <a id="paytmBtn" href="#" target="_blank" class="flex flex-col items-center justify-center bg-white border border-gray-200 hover:bg-gray-50 p-2.5 rounded-xl shadow-xs transition-all text-xs font-semibold text-gray-800 space-y-1">
+                            <i class="fa-solid fa-wallet text-lg text-cyan-600"></i>
+                            <span class="text-[10px]">Paytm</span>
+                        </a>
+                    </div>
+                </div>
+
+                <form onsubmit="completeSubmission(event)" class="space-y-3 pt-3 border-t border-gray-100 text-left text-xs">
+                    <div>
+                        <label class="block font-semibold text-gray-600 mb-1">Upload Payment Proof Screenshot <span class="text-rose-500">*</span></label>
+                        <input type="file" id="uploadPaymentProof" accept="image/*" required class="w-full text-[11px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-emerald-50 file:text-emerald-700">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold py-3.5 px-6 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center space-x-2 text-xs">
+                        <i class="fa-solid fa-circle-check text-xs"></i>
+                        <span>Generate Receipt</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: Thermal Receipt Style -->
+        <section id="screen5" class="hidden space-y-4">
+            <div class="liquid-card rounded-2xl p-3.5 flex items-center justify-between">
+                <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Success</span>
+                <button onclick="downloadReceiptImage()" class="text-[11px] font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3.5 py-2 rounded-xl shadow-md flex items-center space-x-1">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download Receipt</span>
+                </button>
+            </div>
+
+            <!-- Thermal Receipt Card -->
+            <div id="receiptCard" class="bg-white rounded-xl p-5 space-y-3 shadow-2xl border border-gray-200 receipt-font text-[11px] text-gray-900 leading-tight">
+                <!-- Header -->
+                <div class="text-center space-y-0.5 pb-2 border-b border-dashed border-gray-300">
+                    <h2 class="text-sm font-bold tracking-wider">EXAMINATION FEE RECEIPT</h2>
+                    <p class="text-[10px] text-gray-600">ANNUAL PRACTICAL FINE ARTS (PAINTING)<br>EXAMINATION</p>
+                    <p id="recInstitutionName" class="text-[10px] font-bold text-gray-800 pt-1">--</p>
+                    <p class="text-[10px] text-gray-500">Session 2026-27 | Darpan Sukla</p>
+                </div>
+
+                <!-- Meta Details -->
+                <div class="space-y-1 py-1 border-b border-dashed border-gray-300">
+                    <div class="flex justify-between"><span class="text-gray-500">Receipt No:</span> <span id="recReceiptNo" class="font-bold text-gray-900">--</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Date & Time:</span> <span id="receiptTimestamp" class="text-gray-800">--</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Student Name:</span> <span id="recStudentName" class="font-bold text-gray-900 uppercase">--</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Father's/Guardian:</span> <span id="recFather" class="text-gray-800 uppercase">--</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">WhatsApp Mobile:</span> <span id="recMobile" class="text-gray-800">--</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Class Enrolled:</span> <span id="recClass" class="font-bold text-gray-800 text-right max-w-[180px]">--</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Payment Mode:</span> <span class="text-blue-600 font-semibold">Online Payment Mode</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Payment Status:</span> <span class="text-emerald-600 font-bold">VERIFIED / PAID</span></div>
+                </div>
+
+                <!-- Table Header -->
+                <div class="pt-1">
+                    <div class="flex justify-between font-bold border-b border-gray-900 pb-1 text-[10px]">
+                        <span>Description</span>
+                        <span>Amount</span>
+                    </div>
+                    <div class="flex justify-between py-1 text-[10px] border-b border-gray-200">
+                        <span class="max-w-[220px]">Examination Fee (Fine Arts)</span>
+                        <span id="recFeeItem" class="font-bold">--</span>
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div class="space-y-1 pt-1 pb-2 border-b border-dashed border-gray-300">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span>TOTAL AMOUNT:</span>
+                        <span id="recTotalFee" class="text-sm">--</span>
+                    </div>
+                    <div class="text-[10px] text-gray-500 italic">
+                        In Words: <span id="recFeeWords" class="font-semibold text-gray-700 uppercase">--</span>
+                    </div>
+                </div>
+
+                <!-- Barcode & Stamp -->
+                <div class="text-center pt-2 space-y-1">
+                    <div class="inline-block bg-white p-1">
+                        <svg id="receiptBarcode" class="mx-auto h-10 w-48 object-contain"></svg>
+                    </div>
+                    <p id="recBarcodeText" class="text-[9px] text-gray-500 font-mono tracking-widest">--</p>
+                </div>
+
+                <!-- Verified Badge Box -->
+                <div class="bg-indigo-50/60 border border-indigo-100 rounded-lg p-2 text-center text-[10px] text-indigo-900 font-medium space-y-0.5">
+                    <div>✨ DIGITALLY VERIFIED E-RECEIPT • VALID WITHOUT MANUAL SIGNATURE ✨</div>
+                </div>
+
+                <div class="text-center pt-2 text-[10px] font-bold text-gray-700">
+                    Thank You for Your Payment!
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button onclick="resetPortal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-2xl text-xs border border-gray-200">
+                    <i class="fa-solid fa-rotate-right"></i> Register Another Student
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-5 text-center text-[11px] text-gray-400 font-medium border-t border-gray-100 bg-white/40 mt-6">
+        Made by Darpan Sukla
+    </footer>
+
+    <!-- Script Application Logic -->
+    <script>
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9MYoRpbaJg7oK3vqkTjfsm616eD9xvUeeE3DxTSzWCF5gCdBOdqfnQQbbwbnycXopvrScE5kg-3R6/pub?gid=0&single=true&output=csv";
+        const APPS_SCRIPT_WEB_URL = "https://script.google.com/macros/s/AKfycbzxcjMyWBGVHxKLvmdgT9jHG2zBEGNJtmHa8q4tjP15DN7LFjGZqIlhWsD4noueXOfKGg/exec";
+        
+        let sheetRows = [];
+        let currentSchool = "";
+        let schoolStudents = [];
+        let activeStudent = null;
+        let parentStatusState = {
+            father: 'alive',
+            mother: 'alive'
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadGoogleSheetData();
+        });
+
+        function convertGoogleDriveUrl(url) {
+            if (!url) return '';
+            let cleanUrl = url.trim();
+            let fileIdMatch = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || cleanUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (fileIdMatch && fileIdMatch[1]) {
+                let fileId = fileIdMatch[1];
+                return `https://lh3.googleusercontent.com/d/${fileId}`;
+            }
+            return cleanUrl;
+        }
+
+        async function loadGoogleSheetData() {
+            const statusIndicator = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('statusText');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            loadingIndicator.classList.remove('hidden');
+
+            try {
+                const response = await fetch(SHEET_CSV_URL);
+                const csvText = await response.text();
+                parseCSVData(csvText);
+
+                statusIndicator.className = "flex items-center space-x-1.5 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100";
+                statusIndicator.querySelector('span').className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
+                statusText.innerText = "Connected";
+            } catch (error) {
+                console.error("Error loading sheet:", error);
+                statusIndicator.className = "flex items-center space-x-1.5 text-[11px] font-medium text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100";
+                statusIndicator.querySelector('span').className = "w-1.5 h-1.5 rounded-full bg-rose-500";
+                statusText.innerText = "Failed";
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        function parseCSVLine(text) {
+            let cols = [];
+            let current = '';
+            let inQuotes = false;
+            for (let char of text) {
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    cols.push(current.trim().replace(/^"|"$/g, ''));
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            cols.push(current.trim().replace(/^"|"$/g, ''));
+            return cols;
+        }
+
+        function parseCSVData(text) {
+            let lines = text.split('\n');
+            let parsed = [];
+            for (let i = 1; i < lines.length; i++) {
+                let row = lines[i].trim();
+                if (!row) continue;
+                let cols = parseCSVLine(row);
+
+                parsed.push({
+                    timestamp: cols[0] || '',
+                    registrationId: cols[1] || '',
+                    institution: cols[2] || '',
+                    studentName: cols[3] || '',
+                    fatherName: cols[4] || '',
+                    motherName: cols[5] || '',
+                    address: cols[6] || '',
+                    pincode: cols[7] || '',
+                    mobile: cols[8] || '',
+                    dob: cols[9] || '',
+                    age: cols[10] || '',
+                    sex: cols[11] || '',
+                    nationality: cols[12] || '',
+                    motherTongue: cols[13] || '',
+                    subject: cols[15] || '',
+                    appearingFineArtsClass: cols[16] || '',
+                    passportPhotoUrl: convertGoogleDriveUrl(cols[17] || ''),
+                    birthCertificateUrl: convertGoogleDriveUrl(cols[18] || ''),
+                    previousMarksheetUrl: convertGoogleDriveUrl(cols[19] || ''),
+                    paymentProofUrl: convertGoogleDriveUrl(cols[20] || ''),
+                    examFee: cols[21] || '500'
+                });
+            }
+            sheetRows = parsed;
+            populateSchools();
+        }
+
+        function populateSchools() {
+            const schoolSelect = document.getElementById('schoolSelect');
+            const schools = [...new Set(sheetRows.map(r => r.institution))].filter(Boolean);
+            let html = '<option value="" disabled selected>Choose institution...</option>';
+            schools.forEach(s => {
+                html += `<option value="${s}">${s}</option>`;
+            });
+            schoolSelect.innerHTML = html;
+        }
+
+        function loadSchoolStudents() {
+            const school = document.getElementById('schoolSelect').value;
+            if (!school) {
+                alert('Please select an institution first.');
+                return;
+            }
+            currentSchool = school;
+            document.getElementById('displaySelectedSchool').innerText = school;
+            document.getElementById('searchInput').value = '';
+            document.getElementById('studentsGrid').innerHTML = '';
+            document.getElementById('searchInstruction').classList.remove('hidden');
+
+            schoolStudents = sheetRows.filter(r => r.institution.toLowerCase() === school.toLowerCase() || r.institution === school);
+            switchScreen(2);
+        }
+
+        function switchScreen(screenNum) {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`screen${i}`).classList.add('hidden');
+            }
+            document.getElementById(`screen${screenNum}`).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goBackToScreen(screenNum) {
+            switchScreen(screenNum);
+        }
+
+        function filterStudents() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const grid = document.getElementById('studentsGrid');
+            const instruction = document.getElementById('searchInstruction');
+
+            if (!query) {
+                grid.innerHTML = '';
+                instruction.classList.remove('hidden');
+                instruction.innerText = "Please type the full first name of the student...";
+                return;
+            }
+
+            instruction.classList.add('hidden');
+            
+            const filtered = schoolStudents.filter(s => {
+                const firstName = s.studentName.trim().split(/\s+/)[0].toLowerCase();
+                return firstName === query;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="py-8 text-center text-gray-400 text-xs">No student found matching that full first name.</div>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach((student) => {
+                let lookupIndex = schoolStudents.indexOf(student);
+
+                html += `
+                    <div onclick="openStudentProfile(${lookupIndex})" class="liquid-card rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all border border-gray-100 active:scale-[0.99] text-center">
+                        <h3 class="text-xs font-bold text-gray-900">${student.studentName}</h3>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        function toggleFieldEdit(fieldId, btnElement) {
+            const input = document.getElementById(fieldId);
+            if (input.readOnly) {
+                input.readOnly = false;
+                input.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+                input.classList.add('bg-white', 'text-gray-800', 'ring-2', 'ring-blue-500/20');
+                btnElement.innerText = "Lock";
+                btnElement.className = "text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md hover:bg-rose-100";
+            } else {
+                input.readOnly = true;
+                input.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+                input.classList.remove('bg-white', 'text-gray-800', 'ring-2', 'ring-blue-500/20');
+                btnElement.innerText = "Edit";
+                btnElement.className = "text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100";
+            }
+        }
+
+        function setParentStatus(parentType, status) {
+            parentStatusState[parentType] = status;
+            const aliveBtn = document.getElementById(`${parentType}AliveBtn`);
+            const lateBtn = document.getElementById(`${parentType}LateBtn`);
+            const inputField = document.getElementById(parentType === 'father' ? 'editFatherName' : 'editMotherName');
+            
+            let currentVal = inputField.value.replace(/^(late|LATE)\s+/i, '').trim();
+
+            if (status === 'late') {
+                lateBtn.className = "px-2 py-0.5 rounded-md bg-white text-gray-800 shadow-sm transition-all";
+                aliveBtn.className = "px-2 py-0.5 rounded-md text-gray-500 transition-all";
+                if (currentVal) {
+                    inputField.value = `LATE ${currentVal}`;
+                }
+            } else {
+                aliveBtn.className = "px-2 py-0.5 rounded-md bg-white text-gray-800 shadow-sm transition-all";
+                lateBtn.className = "px-2 py-0.5 rounded-md text-gray-500 transition-all";
+                inputField.value = currentVal;
+            }
+        }
+
+        function openStudentProfile(index) {
+            const student = schoolStudents[index];
+            activeStudent = student;
+
+            parentStatusState.father = 'alive';
+            parentStatusState.mother = 'alive';
+            setParentStatus('father', 'alive');
+            setParentStatus('mother', 'alive');
+
+            document.getElementById('profileRegId').innerText = `ID: ${student.registrationId || '--'}`;
+            document.getElementById('editRegId').value = student.registrationId || '';
+            document.getElementById('editInstitution').value = student.institution || '';
+            document.getElementById('editDob').value = student.dob || '';
+            document.getElementById('editAge').value = student.age || '';
+            document.getElementById('editSex').value = student.sex || '';
+            document.getElementById('editFineArtsClass').value = student.appearingFineArtsClass || '';
+            
+            document.getElementById('editNationality').value = student.nationality || '';
+            document.getElementById('editMotherTongue').value = student.motherTongue || '';
+            document.getElementById('editSubject').value = student.subject || '';
+
+            const editableFields = ['editStudentName', 'editFatherName', 'editMotherName', 'editAddress', 'editPincode', 'editMobile'];
+            editableFields.forEach(id => {
+                const el = document.getElementById(id);
+                el.readOnly = true;
+                el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
+                el.classList.remove('bg-white', 'text-gray-800', 'ring-2', 'ring-blue-500/20');
+            });
+
+            document.getElementById('editStudentName').value = student.studentName || '';
+            document.getElementById('editFatherName').value = student.fatherName || '';
+            document.getElementById('editMotherName').value = student.motherName || '';
+            document.getElementById('editAddress').value = student.address || '';
+            document.getElementById('editPincode').value = student.pincode || '';
+            document.getElementById('editMobile').value = student.mobile || '';
+            
+            document.getElementById('editEduQualification').selectedIndex = 0;
+
+            document.querySelectorAll('#studentEditForm button[type="button"]').forEach(btn => {
+                if (btn.innerText === "Lock") {
+                    btn.innerText = "Edit";
+                    btn.className = "text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100";
+                }
+            });
+
+            const visharadSection = document.getElementById('visharadUploadSection');
+            const marksheetInput = document.getElementById('uploadMarksheet');
+            const aadharInput = document.getElementById('uploadAadhar');
+            
+            const fineArtsClass = (student.appearingFineArtsClass || "").trim();
+            if (fineArtsClass === "Chitra Visharad Part-1 (4th Year)" || fineArtsClass === "Chitra Visharad Final (5th Year)") {
+                visharadSection.classList.remove('hidden');
+                marksheetInput.required = true;
+                aadharInput.required = true;
+            } else {
+                visharadSection.classList.add('hidden');
+                marksheetInput.required = false;
+                aadharInput.required = false;
+            }
+
+            const photoContainer = document.getElementById('profilePhotoContainer');
+            if (student.passportPhotoUrl) {
+                photoContainer.innerHTML = `<img src="${student.passportPhotoUrl}" alt="${student.studentName}" class="w-full h-full object-cover" onerror="this.innerHTML='<i class=\'fa-solid fa-user text-2xl text-gray-300\'></i>'">`;
+            } else {
+                photoContainer.innerHTML = `<i class="fa-solid fa-user text-2xl text-gray-300"></i>`;
+            }
+
+            switchScreen(3);
+        }
+
+        function proceedToPayment(event) {
+            event.preventDefault();
+            if (!activeStudent) return;
+
+            const pincodeVal = document.getElementById('editPincode').value;
+            const mobileVal = document.getElementById('editMobile').value;
+
+            if (pincodeVal.length !== 6) {
+                alert('Pincode must be exactly 6 digits.');
+                return;
+            }
+
+            if (mobileVal.length !== 10) {
+                alert('Mobile (WhatsApp) must be exactly 10 digits.');
+                return;
+            }
+
+            activeStudent.studentName = document.getElementById('editStudentName').value;
+            activeStudent.fatherName = document.getElementById('editFatherName').value;
+            activeStudent.motherName = document.getElementById('editMotherName').value;
+            activeStudent.address = document.getElementById('editAddress').value;
+            activeStudent.pincode = pincodeVal;
+            activeStudent.mobile = mobileVal;
+            activeStudent.educationalQualification = document.getElementById('editEduQualification').value;
+
+            let feeAmount = activeStudent.examFee || "500";
+            document.getElementById('payDisplayFee').innerText = `₹${feeAmount}`;
+
+            let remarks = `${activeStudent.studentName} - ${activeStudent.appearingFineArtsClass}`;
+            document.getElementById('qrDefaultRemarks').innerText = remarks;
+
+            let upiString = `upi://pay?pa=sdarpan128@oksbi&pn=Exam%20Fee&am=${feeAmount}&cu=INR&tn=${encodeURIComponent(remarks)}`;
+            document.getElementById('qrCodeImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiString)}`;
+
+            // Set Direct App UPI Deeplinks with default remarks & amount
+            document.getElementById('gpayBtn').href = upiString;
+            document.getElementById('phonepeBtn').href = upiString;
+            document.getElementById('paytmBtn').href = upiString;
+
+            switchScreen(4);
+        }
+
+        function getFileBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) {
+                    resolve("");
+                    return;
+                }
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function numberToWords(num) {
+            let a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
+            let b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+            
+            let n = parseInt(num);
+            if (n === 0) return 'zero';
+            if (n < 20) return a[n];
+            if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+            if (n < 1000) return a[Math.floor(n / 100)] + 'hundred ' + (n % 100 !== 0 ? 'and ' + numberToWords(n % 100) : '');
+            if (n < 100000) return numberToWords(Math.floor(n / 1000)) + 'thousand ' + (n % 1000 !== 0 ? numberToWords(n % 1000) : '');
+            return num.toString();
+        }
+
+        function generateMockBarcodeSVG(text) {
+            let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="100%" height="40">`;
+            svg += `<rect width="200" height="50" fill="#ffffff"/>`;
+            let x = 10;
+            let pattern = [2, 1, 3, 1, 1, 2, 4, 1, 2, 1, 3, 2, 1, 1, 4, 2, 1, 3, 1, 2, 3, 1, 1, 2, 4, 1, 2];
+            for (let i = 0; i < pattern.length; i++) {
+                let w = pattern[i];
+                svg += `<rect x="${x}" y="5" width="${w * 2}" height="32" fill="#000000"/>`;
+                x += w * 2 + 3;
+            }
+            svg += `<text x="100" y="46" font-family="monospace" font-size="8" text-anchor="middle" fill="#333333">${text}</text>`;
+            svg += `</svg>`;
+            return "data:image/svg+xml;base64," + btoa(svg);
+        }
+
+        async function completeSubmission(event) {
+            event.preventDefault();
+            const proofInput = document.getElementById('uploadPaymentProof');
+            if (!proofInput.files || proofInput.files.length === 0) {
+                alert('Payment proof upload is mandatory.');
+                return;
+            }
+
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Please wait generating receipt</span>`;
+            submitBtn.disabled = true;
+
+            try {
+                let marksheetFile = document.getElementById('uploadMarksheet')?.files[0];
+                let aadharFile = document.getElementById('uploadAadhar')?.files[0];
+                let paymentProofFile = proofInput.files[0];
+
+                let paymentProofBase64 = await getFileBase64(paymentProofFile);
+                let marksheetBase64 = await getFileBase64(marksheetFile);
+                let aadharBase64 = await getFileBase64(aadharFile);
+
+                let payload = {
+                    registrationId: activeStudent.registrationId,
+                    institution: activeStudent.institution,
+                    studentName: activeStudent.studentName,
+                    fatherName: activeStudent.fatherName,
+                    motherName: activeStudent.motherName,
+                    address: activeStudent.address,
+                    pincode: activeStudent.pincode,
+                    mobile: activeStudent.mobile,
+                    dob: activeStudent.dob,
+                    age: activeStudent.age,
+                    sex: activeStudent.sex,
+                    nationality: activeStudent.nationality,
+                    motherTongue: activeStudent.motherTongue,
+                    educationalQualification: activeStudent.educationalQualification,
+                    subject: activeStudent.subject,
+                    appearingFineArtsClass: activeStudent.appearingFineArtsClass,
+                    examFee: activeStudent.examFee || '500',
+                    passportPhoto: activeStudent.passportPhotoUrl || "",
+                    paymentProof: paymentProofBase64,
+                    marksheet: marksheetBase64,
+                    aadhar: aadharBase64
+                };
+
+                await fetch(APPS_SCRIPT_WEB_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                let nowStr = new Date().toLocaleString();
+                let receiptNo = `REC-${Math.floor(100000 + Math.random() * 900000)}`;
+                let feeAmt = activeStudent.examFee || '500';
+
+                document.getElementById('recReceiptNo').innerText = receiptNo;
+                document.getElementById('receiptTimestamp').innerText = nowStr;
+                document.getElementById('recInstitutionName').innerText = activeStudent.institution || '--';
+                document.getElementById('recStudentName').innerText = activeStudent.studentName || '--';
+                document.getElementById('recFather').innerText = activeStudent.fatherName || '--';
+                document.getElementById('recMobile').innerText = activeStudent.mobile || '--';
+                document.getElementById('recClass').innerText = `${activeStudent.appearingFineArtsClass || '--'}`;
+                document.getElementById('recFeeItem').innerText = feeAmt;
+                document.getElementById('recTotalFee').innerText = feeAmt;
+                document.getElementById('recFeeWords').innerText = `${numberToWords(feeAmt).toUpperCase()}RUPEES ONLY`;
+                
+                let barcodeDataUri = generateMockBarcodeSVG(receiptNo);
+                document.getElementById('receiptBarcode').outerHTML = `<img id="receiptBarcode" src="${barcodeDataUri}" class="mx-auto h-9 w-48 object-contain">`;
+                document.getElementById('recBarcodeText').innerText = receiptNo;
+
+                switchScreen(5);
+
+            } catch (error) {
+                console.error("Submission error:", error);
+                alert("Failed to save data. Please check your network connection and try again.");
+            } finally {
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function downloadReceiptImage() {
+            const receiptElement = document.getElementById('receiptCard');
+            html2canvas(receiptElement, { scale: 2 }).then(canvas => {
+                let link = document.createElement('a');
+                link.download = `Receipt_${activeStudent.registrationId || 'Student'}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function resetPortal() {
+            activeStudent = null;
+            document.getElementById('studentEditForm').reset();
+            switchScreen(1);
+        }
+    </script>
+</body>
+</html>
