@@ -3,920 +3,1287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Existing Students Exam Form Fillup</title>
-    <!-- Tailwind CSS for mobile layout & styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- html2canvas for receipt download -->
+    <title>Examination Form Fillup Portal - Darpan</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        :root {
+            --bg-color: #F5F5F7;
+            --card-bg: #FFFFFF;
+            --text-primary: #1D1D1F;
+            --text-secondary: #555555;
+            --accent-color: #0071E3;
+            --border-color: #D2D2D7;
+            --error-color: #FF3B30;
+            --success-color: #34C759;
+            --radius: 14px;
+            --transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #F5F5F7;
-            color: #1D1D1F;
-            max-width: 480px;
-            margin: 0 auto;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 0;
         }
-        .liquid-card {
-            background: rgba(255, 255, 255, 0.85);
+
+        .mobile-container {
+            width: 100%;
+            max-width: 430px;
+            background: var(--card-bg);
+            border-radius: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 431px) {
+            .mobile-container {
+                border-radius: 28px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+                min-height: 850px;
+                border: 1px solid rgba(255, 255, 255, 0.6);
+            }
+        }
+
+        /* Header */
+        .app-header {
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 0.5px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .receipt-font {
-            font-family: 'Courier Prime', monospace;
+
+        .app-header h1 {
+            font-size: 15px;
+            font-weight: 600;
         }
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
+
+        .timer-badge {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--error-color);
+            background: rgba(255, 59, 48, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
         }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(0,0,0,0.1);
-            border-radius: 10px;
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            padding-bottom: 90px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: #FAFAFC;
+            color: var(--text-primary);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-color);
+            background: #FFFFFF;
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.12);
+        }
+
+        input[readonly], textarea[readonly] {
+            background-color: #F0F0F2;
+            color: #6E6E73;
+            border-color: #E5E5EA;
+            opacity: 0.85;
+            cursor: not-allowed;
+            font-weight: 500;
+        }
+
+        input.uppercase-input {
+            text-transform: uppercase;
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            background: var(--accent-color);
+            color: #FFFFFF;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #E5E5EA;
+            color: var(--text-primary);
+            margin-top: 8px;
+        }
+
+        /* Search Results Box */
+        .search-results {
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            margin-top: 6px;
+            background: #FFFFFF;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .search-item {
+            padding: 14px 16px;
+            border-bottom: 0.5px solid #E5E5EA;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .search-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-item:hover {
+            background: #F2F2F7;
+        }
+
+        /* Photo Preview */
+        .photo-preview-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .photo-preview {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border-color);
+            background: #E5E5EA;
+        }
+
+        /* Alive / Late Toggle Switch */
+        .status-toggle-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #FAFAFC;
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+        }
+
+        .status-label-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .3s cubic-bezier(0.25, 1, 0.5, 1);
+            border-radius: 28px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s cubic-bezier(0.25, 1, 0.5, 1);
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .slider-state-text {
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 8px;
+            min-width: 40px;
+        }
+
+        /* File Upload */
+        .file-upload-box {
+            border: 2px dashed var(--border-color);
+            padding: 16px;
+            border-radius: var(--radius);
+            text-align: center;
+            background: #FAFAFC;
+            cursor: pointer;
+            margin-top: 6px;
+        }
+
+        .file-upload-box input {
+            display: none;
+        }
+
+        .file-upload-label {
+            font-size: 15px;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* Payment UI */
+        .payment-box {
+            background: #FAFAFC;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .qr-code {
+            width: 180px;
+            height: 180px;
+            margin: 12px auto;
+            background: #FFF;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .payment-links {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .pay-app-btn {
+            padding: 12px 6px;
+            font-size: 13px;
+            font-weight: 600;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        /* Success Green Tick Animation Styles */
+        .success-banner {
+            text-align: center;
+            padding: 24px 16px;
+            background: #F0FFF4;
+            border: 1px solid #C6F6D5;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .success-checkmark {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 12px auto;
+            border-radius: 50%;
+            background: var(--success-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(52, 199, 89, 0.3);
+            animation: scaleUp 0.5s ease;
+        }
+
+        .success-checkmark svg {
+            width: 38px;
+            height: 38px;
+            fill: #FFFFFF;
+        }
+
+        @keyframes scaleUp {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: translateY(-10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Loading Spinner Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--border-color);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer Branding */
+        .app-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 0.5px solid var(--border-color);
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        /* RECEIPT CARD */
+        #receipt-card {
+            background: #FFFFFF;
+            padding: 20px 16px;
+            border-radius: 8px;
+            border: 1px solid #CCCCCC;
+            font-family: 'Courier New', Courier, monospace;
+            color: #000000;
+            width: 100%;
+        }
+
+        .rec-top-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .rec-sub-title {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 2px;
+            color: #333;
+        }
+
+        .rec-inst-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .rec-session {
+            text-align: center;
+            font-size: 11px;
+            margin-bottom: 12px;
+            color: #444;
+        }
+
+        .rec-line {
+            border-top: 1px dashed #666;
+            margin: 8px 0;
+        }
+
+        .rec-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 3px 0;
+        }
+
+        .rec-row span:first-child {
+            color: #333;
+        }
+
+        .rec-row span:last-child {
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .rec-table-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .barcode-container {
+            text-align: center;
+            margin: 14px 0 6px 0;
+            background: #FFF;
+            padding: 8px;
+        }
+
+        .digital-stamp {
+            background: #F0F4FF;
+            border: 1px dashed #B0C4DE;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #0047AB;
+            margin-top: 12px;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-blue-500 selection:text-white">
+<body>
 
-    <!-- Top Navigation Header -->
-    <header class="w-full bg-white/85 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100">
-        <div class="px-4 py-3.5 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-semibold shadow-md shadow-blue-500/20">
-                    <i class="fa-solid fa-graduation-cap text-xs"></i>
-                </div>
-                <div>
-                    <h1 class="text-sm font-semibold tracking-tight text-gray-900">Exam Form Fillup</h1>
-                </div>
+<!-- Loading Overlay for API Sync -->
+<div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p id="loading-text" style="font-weight: 600; font-size: 15px; color: var(--text-primary);">Submitting details & uploading documents...</p>
+</div>
+
+<div class="mobile-container">
+    <!-- Header -->
+    <div class="app-header">
+        <h1>Examination Form Fillup Portal</h1>
+        <div id="timer-display" class="timer-badge" style="display: none;">10:00</div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+
+        <!-- SCREEN 1: Institution & Student Search -->
+        <div id="screen-1" class="screen active">
+            <h2>Select Institution</h2>
+            <p class="subtitle">Choose your school to start exam form fillup</p>
+            
+            <div class="form-group">
+                <label>Institution Name</label>
+                <select id="select-institution">
+                    <option value="">-- Select Institution --</option>
+                </select>
             </div>
-            <div id="connectionStatus" class="flex items-center space-x-1.5 text-[11px] font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-100">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                <span id="statusText">Connecting</span>
-            </div>
-        </div>
-    </header>
 
-    <!-- Main Container -->
-    <main class="w-full px-4 py-5 flex-grow space-y-5">
-
-        <!-- SCREEN 1: Choose School Name -->
-        <section id="screen1" class="liquid-card rounded-3xl p-6 space-y-5 shadow-xl">
-            <div class="text-center space-y-1">
-                <h2 class="text-lg font-bold tracking-tight text-gray-900">Select Institution</h2>
-                <p class="text-xs text-gray-500">Choose your school to start exam form fillup</p>
+            <div class="form-group" id="search-group" style="display:none;">
+                <label>Search Student First Name *</label>
+                <input type="text" id="search-name-input" placeholder="Type first name (Min 3 characters)..." class="uppercase-input">
+                <div id="search-results" class="search-results"></div>
             </div>
 
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Institution Name</label>
-                    <div class="relative">
-                        <select id="schoolSelect" class="w-full bg-gray-50/90 border border-gray-200 rounded-2xl px-4 py-3.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none">
-                            <option value="" disabled selected>Choose institution...</option>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-400">
-                            <i class="fa-solid fa-chevron-down text-xs"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="pt-2">
-                    <button onclick="loadSchoolStudents()" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-3.5 px-6 rounded-2xl shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center space-x-2 text-xs">
-                        <span>Continue</span>
-                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Loading Indicator -->
-        <div id="loadingIndicator" class="hidden flex flex-col items-center justify-center py-16 space-y-3">
-            <div class="w-7 h-7 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-[11px] text-gray-500 font-medium">Loading student database...</p>
+            <button class="btn" id="btn-to-screen-2" disabled>Continue</button>
         </div>
 
-        <!-- SCREEN 2: Search Students Name -->
-        <section id="screen2" class="hidden space-y-4">
-            <div class="liquid-card rounded-2xl p-3.5 flex items-center justify-between">
-                <button onclick="goBackToScreen(1)" class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl flex items-center space-x-1">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span>School</span>
-                </button>
-                <span id="displaySelectedSchool" class="text-[11px] font-bold text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg truncate max-w-[200px]"></span>
+        <!-- SCREEN 2: Edit & Verify Form Details -->
+        <div id="screen-2" class="screen">
+            <h2>Student Details</h2>
+            <p class="subtitle">Verify and update your details below</p>
+
+            <div class="photo-preview-container">
+                <img id="preview-photo" class="photo-preview" src="" alt="Student Photo">
             </div>
 
-            <!-- Search Bar -->
-            <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400">
-                    <i class="fa-solid fa-search text-xs"></i>
-                </span>
-                <input type="text" id="searchInput" oninput="filterStudents()" placeholder="Type full first name..." class="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm">
+            <div class="form-group">
+                <label>Institution</label>
+                <input type="text" id="val-institution" readonly>
             </div>
 
-            <p id="searchInstruction" class="text-center text-[11px] text-gray-400 py-4">Please type the full first name of the student...</p>
-
-            <!-- Students List Results -->
-            <div id="studentsGrid" class="flex flex-col gap-2.5"></div>
-        </section>
-
-        <!-- SCREEN 3: Profile & Edit Details -->
-        <section id="screen3" class="hidden space-y-4">
-            <div class="liquid-card rounded-2xl p-3.5 flex items-center justify-between">
-                <button onclick="goBackToScreen(2)" class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl flex items-center space-x-1">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span>Search</span>
-                </button>
-                <span class="text-[11px] font-bold text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg">Student Profile</span>
+            <div class="form-group">
+                <label>Student Name</label>
+                <input type="text" id="val-student-name" class="uppercase-input">
             </div>
 
-            <div class="liquid-card rounded-3xl p-5 space-y-4 text-center">
-                <div id="profilePhotoContainer" class="w-24 h-24 rounded-2xl bg-gray-100 mx-auto overflow-hidden shadow-md border border-gray-200 flex items-center justify-center">
-                    <i class="fa-solid fa-user text-2xl text-gray-300"></i>
+            <!-- Father Details with On/Off Toggle -->
+            <div class="form-group">
+                <label>Father's Name</label>
+                <div class="status-toggle-wrapper">
+                    <span class="status-label-text">Status:</span>
+                    <div style="display: flex; align-items: center;">
+                        <label class="switch">
+                            <input type="checkbox" id="father-toggle" onchange="handleFatherToggle()">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="father-state-label" class="slider-state-text" style="color: var(--success-color);">Alive</span>
+                    </div>
                 </div>
-                <div>
-                    <span id="profileRegId" class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">--</span>
-                </div>
-
-                <form id="studentEditForm" onsubmit="proceedToPayment(event)" class="space-y-4 text-left text-xs">
-                    
-                    <div>
-                        <label class="block font-semibold text-gray-400 mb-1">Registration ID</label>
-                        <input type="text" id="editRegId" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-gray-400 mb-1">Institution</label>
-                        <input type="text" id="editInstitution" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="font-semibold text-gray-700">Student Name</label>
-                            <button type="button" onclick="toggleFieldEdit('editStudentName', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
-                        </div>
-                        <input type="text" id="editStudentName" readonly required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="font-semibold text-gray-700">Father's Name</label>
-                            <div class="flex items-center space-x-2">
-                                <div class="inline-flex rounded-lg bg-gray-200 p-0.5 text-[10px] font-bold">
-                                    <button type="button" id="fatherAliveBtn" onclick="setParentStatus('father', 'alive')" class="px-2 py-0.5 rounded-md bg-white text-gray-800 shadow-sm transition-all">Alive</button>
-                                    <button type="button" id="fatherLateBtn" onclick="setParentStatus('father', 'late')" class="px-2 py-0.5 rounded-md text-gray-500 transition-all">Late</button>
-                                </div>
-                                <button type="button" onclick="toggleFieldEdit('editFatherName', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
-                            </div>
-                        </div>
-                        <input type="text" id="editFatherName" readonly required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="font-semibold text-gray-700">Mother's Name</label>
-                            <div class="flex items-center space-x-2">
-                                <div class="inline-flex rounded-lg bg-gray-200 p-0.5 text-[10px] font-bold">
-                                    <button type="button" id="motherAliveBtn" onclick="setParentStatus('mother', 'alive')" class="px-2 py-0.5 rounded-md bg-white text-gray-800 shadow-sm transition-all">Alive</button>
-                                    <button type="button" id="motherLateBtn" onclick="setParentStatus('mother', 'late')" class="px-2 py-0.5 rounded-md text-gray-500 transition-all">Late</button>
-                                </div>
-                                <button type="button" onclick="toggleFieldEdit('editMotherName', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
-                            </div>
-                        </div>
-                        <input type="text" id="editMotherName" readonly required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="font-semibold text-gray-700">Address</label>
-                            <button type="button" onclick="toggleFieldEdit('editAddress', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
-                        </div>
-                        <input type="text" id="editAddress" readonly required class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="font-semibold text-gray-700">Pincode (6 Digits)</label>
-                            <button type="button" onclick="toggleFieldEdit('editPincode', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
-                        </div>
-                        <input type="text" id="editPincode" readonly required maxlength="6" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 6);" class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="font-semibold text-gray-700">Mobile (WhatsApp - 10 Digits)</label>
-                            <button type="button" onclick="toggleFieldEdit('editMobile', this)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100">Edit</button>
-                        </div>
-                        <input type="text" id="editMobile" readonly required maxlength="10" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 10);" class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-gray-400 mb-1">Nationality</label>
-                        <input type="text" id="editNationality" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-gray-400 mb-1">Mother Tongue</label>
-                        <input type="text" id="editMotherTongue" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-gray-400 mb-1">Date of Birth</label>
-                        <input type="text" id="editDob" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-gray-400 mb-1">Age</label>
-                        <input type="text" id="editAge" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-gray-400 mb-1">Sex</label>
-                        <input type="text" id="editSex" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-gray-700 mb-1">Educational Qualification <span class="text-rose-500">*</span></label>
-                        <div class="relative">
-                            <select id="editEduQualification" required class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 appearance-none">
-                                <option value="" disabled selected>Select Class...</option>
-                                <option value="Below Class I">Below Class I</option>
-                                <option value="Class I">Class I</option>
-                                <option value="Class II">Class II</option>
-                                <option value="Class III">Class III</option>
-                                <option value="Class IV">Class IV</option>
-                                <option value="Class V">Class V</option>
-                                <option value="Class VI">Class VI</option>
-                                <option value="Class VII">Class VII</option>
-                                <option value="Class VIII">Class VIII</option>
-                                <option value="Class IX">Class IX</option>
-                                <option value="Class X (Secondary / Matriculation)">Class X (Secondary / Matriculation)</option>
-                                <option value="Class XI">Class XI</option>
-                                <option value="Class XII (Higher Secondary / Senior Secondary)">Class XII (Higher Secondary / Senior Secondary)</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
-                                <i class="fa-solid fa-chevron-down text-xs"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-gray-400 mb-1">Subject</label>
-                        <input type="text" id="editSubject" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-gray-400 mb-1">Appearing Fine Arts Class</label>
-                        <input type="text" id="editFineArtsClass" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 font-medium text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div id="visharadUploadSection" class="hidden space-y-3.5 pt-3 border-t border-dashed border-gray-200">
-                        <div class="bg-blue-50/60 p-2.5 rounded-xl text-blue-800 text-[11px] font-medium">
-                            <i class="fa-solid fa-circle-info mr-1"></i> Additional documents required for this Fine Arts class.
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Upload Class 10th/11th/12th Marksheet <span class="text-rose-500">*</span></label>
-                            <input type="file" id="uploadMarksheet" accept="image/*,.pdf" class="w-full text-[11px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700">
-                        </div>
-                        <div>
-                            <label class="block font-semibold text-gray-700 mb-1">Upload Aadhar Card <span class="text-rose-500">*</span></label>
-                            <input type="file" id="uploadAadhar" accept="image/*,.pdf" class="w-full text-[11px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700">
-                        </div>
-                    </div>
-
-                    <div class="pt-2">
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-semibold py-3.5 px-6 rounded-2xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center space-x-2 text-xs">
-                            <span>Proceed to Payment</span>
-                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </section>
-
-        <!-- SCREEN 4: Payment Option & QR Code -->
-        <section id="screen4" class="hidden space-y-4">
-            <div class="liquid-card rounded-2xl p-3.5 flex items-center justify-between">
-                <button onclick="goBackToScreen(3)" class="text-[11px] font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-xl flex items-center space-x-1">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span>Profile</span>
-                </button>
-                <span class="text-[11px] font-bold text-gray-800 bg-gray-100 px-2.5 py-1 rounded-lg">Fee Payment</span>
+                <input type="text" id="val-father-name" class="uppercase-input">
             </div>
 
-            <div class="liquid-card rounded-3xl p-6 space-y-5 text-center shadow-xl">
-                <div class="space-y-0.5">
-                    <h2 class="text-base font-bold text-gray-900">Scan & Pay Exam Fee</h2>
-                    <p class="text-[11px] text-gray-500">UPI ID: sdarpan128@oksbi</p>
-                </div>
-
-                <div class="bg-blue-50/70 border border-blue-100 rounded-2xl p-3 flex items-center justify-between text-xs">
-                    <span class="text-gray-500 font-semibold">Amount:</span>
-                    <span id="payDisplayFee" class="text-lg font-black text-blue-600">₹0</span>
-                </div>
-
-                <!-- QR Code -->
-                <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 inline-block">
-                    <img id="qrCodeImage" src="" alt="QR Code" class="w-40 h-40 object-contain mx-auto">
-                </div>
-                <p class="text-[10px] text-gray-400">Default Remarks: <span id="qrDefaultRemarks" class="font-semibold text-gray-600">--</span></p>
-
-                <!-- Direct UPI App Payment Buttons -->
-                <div class="space-y-2 pt-2 border-t border-gray-100">
-                    <p class="text-[11px] font-semibold text-gray-500 text-left mb-1">Pay Directly via UPI Apps:</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        <a id="gpayBtn" href="#" target="_blank" class="flex flex-col items-center justify-center bg-white border border-gray-200 hover:bg-gray-50 p-2.5 rounded-xl shadow-xs transition-all text-xs font-semibold text-gray-800 space-y-1">
-                            <i class="fa-brands fa-google-pay text-lg text-blue-600"></i>
-                            <span class="text-[10px]">Google Pay</span>
-                        </a>
-                        <a id="phonepeBtn" href="#" target="_blank" class="flex flex-col items-center justify-center bg-white border border-gray-200 hover:bg-gray-50 p-2.5 rounded-xl shadow-xs transition-all text-xs font-semibold text-gray-800 space-y-1">
-                            <i class="fa-solid fa-mobile-screen-button text-lg text-purple-600"></i>
-                            <span class="text-[10px]">PhonePe</span>
-                        </a>
-                        <a id="paytmBtn" href="#" target="_blank" class="flex flex-col items-center justify-center bg-white border border-gray-200 hover:bg-gray-50 p-2.5 rounded-xl shadow-xs transition-all text-xs font-semibold text-gray-800 space-y-1">
-                            <i class="fa-solid fa-wallet text-lg text-cyan-600"></i>
-                            <span class="text-[10px]">Paytm</span>
-                        </a>
+            <!-- Mother Details with On/Off Toggle -->
+            <div class="form-group">
+                <label>Mother's Name</label>
+                <div class="status-toggle-wrapper">
+                    <span class="status-label-text">Status:</span>
+                    <div style="display: flex; align-items: center;">
+                        <label class="switch">
+                            <input type="checkbox" id="mother-toggle" onchange="handleMotherToggle()">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="mother-state-label" class="slider-state-text" style="color: var(--success-color);">Alive</span>
                     </div>
                 </div>
-
-                <form onsubmit="completeSubmission(event)" class="space-y-3 pt-3 border-t border-gray-100 text-left text-xs">
-                    <div>
-                        <label class="block font-semibold text-gray-600 mb-1">Upload Payment Proof Screenshot <span class="text-rose-500">*</span></label>
-                        <input type="file" id="uploadPaymentProof" accept="image/*" required class="w-full text-[11px] text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[11px] file:font-semibold file:bg-emerald-50 file:text-emerald-700">
-                    </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-semibold py-3.5 px-6 rounded-2xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center space-x-2 text-xs">
-                        <i class="fa-solid fa-circle-check text-xs"></i>
-                        <span>Generate Receipt</span>
-                    </button>
-                </form>
-            </div>
-        </section>
-
-        <!-- SCREEN 5: Thermal Receipt Style -->
-        <section id="screen5" class="hidden space-y-4">
-            <div class="liquid-card rounded-2xl p-3.5 flex items-center justify-between">
-                <span class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Success</span>
-                <button onclick="downloadReceiptImage()" class="text-[11px] font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3.5 py-2 rounded-xl shadow-md flex items-center space-x-1">
-                    <i class="fa-solid fa-download"></i>
-                    <span>Download Receipt</span>
-                </button>
+                <input type="text" id="val-mother-name" class="uppercase-input">
             </div>
 
-            <!-- Thermal Receipt Card -->
-            <div id="receiptCard" class="bg-white rounded-xl p-5 space-y-3 shadow-2xl border border-gray-200 receipt-font text-[11px] text-gray-900 leading-tight">
-                <!-- Header -->
-                <div class="text-center space-y-0.5 pb-2 border-b border-dashed border-gray-300">
-                    <h2 class="text-sm font-bold tracking-wider">EXAMINATION FEE RECEIPT</h2>
-                    <p class="text-[10px] text-gray-600">ANNUAL PRACTICAL FINE ARTS (PAINTING)<br>EXAMINATION</p>
-                    <p id="recInstitutionName" class="text-[10px] font-bold text-gray-800 pt-1">--</p>
-                    <p class="text-[10px] text-gray-500">Session 2026-27 | Darpan Sukla</p>
-                </div>
+            <div class="form-group">
+                <label>Address</label>
+                <textarea id="val-address" rows="3" class="uppercase-input" style="resize: none;"></textarea>
+            </div>
 
-                <!-- Meta Details -->
-                <div class="space-y-1 py-1 border-b border-dashed border-gray-300">
-                    <div class="flex justify-between"><span class="text-gray-500">Receipt No:</span> <span id="recReceiptNo" class="font-bold text-gray-900">--</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Date & Time:</span> <span id="receiptTimestamp" class="text-gray-800">--</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Student Name:</span> <span id="recStudentName" class="font-bold text-gray-900 uppercase">--</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Father's/Guardian:</span> <span id="recFather" class="text-gray-800 uppercase">--</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">WhatsApp Mobile:</span> <span id="recMobile" class="text-gray-800">--</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Class Enrolled:</span> <span id="recClass" class="font-bold text-gray-800 text-right max-w-[180px]">--</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Payment Mode:</span> <span class="text-blue-600 font-semibold">Online Payment Mode</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">Payment Status:</span> <span class="text-emerald-600 font-bold">VERIFIED / PAID</span></div>
-                </div>
+            <div class="form-group">
+                <label>Pincode (6 Digits)</label>
+                <input type="text" id="val-pincode" maxlength="6" inputmode="numeric">
+            </div>
 
-                <!-- Table Header -->
-                <div class="pt-1">
-                    <div class="flex justify-between font-bold border-b border-gray-900 pb-1 text-[10px]">
-                        <span>Description</span>
-                        <span>Amount</span>
+            <div class="form-group">
+                <label>Mobile / WhatsApp (10 Digits)</label>
+                <input type="text" id="val-mobile" maxlength="10" inputmode="numeric">
+            </div>
+
+            <div class="form-group">
+                <label>Nationality</label>
+                <input type="text" id="val-nationality" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Mother Tongue</label>
+                <input type="text" id="val-mother-tongue" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Date of Birth</label>
+                <input type="text" id="val-dob" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Age</label>
+                <input type="text" id="val-age" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Sex</label>
+                <input type="text" id="val-sex" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Educational Qualification *</label>
+                <select id="val-edu-qual">
+                    <option value="">-- Select Qualification --</option>
+                    <option value="Below Class I">Below Class I</option>
+                    <option value="Class I">Class I</option>
+                    <option value="Class II">Class II</option>
+                    <option value="Class III">Class III</option>
+                    <option value="Class IV">Class IV</option>
+                    <option value="Class V">Class V</option>
+                    <option value="Class VI">Class VI</option>
+                    <option value="Class VII">Class VII</option>
+                    <option value="Class VIII">Class VIII</option>
+                    <option value="Class IX">Class IX</option>
+                    <option value="Class X (Secondary / Matriculation)">Class X (Secondary / Matriculation)</option>
+                    <option value="Class XI">Class XI</option>
+                    <option value="Class XII (Higher Secondary / Senior Secondary)">Class XII (Higher Secondary / Senior Secondary)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Subject</label>
+                <input type="text" id="val-subject" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Appearing Fine Arts Class</label>
+                <input type="text" id="val-fine-class" readonly>
+            </div>
+
+            <!-- Conditional Uploads for Visharad -->
+            <div id="visharad-uploads" style="display:none; background:#F2F2F7; padding:12px; border-radius:12px; margin-bottom:16px;">
+                <p style="font-size:14px; font-weight:600; color:var(--error-color); margin-bottom:8px;">Mandatory Documents for Visharad Students</p>
+                
+                <div class="form-group">
+                    <label>Upload Class 10th/11th/12th Marksheet *</label>
+                    <div class="file-upload-box" onclick="document.getElementById('file-marksheet').click()">
+                        <span class="file-upload-label" id="label-marksheet">Choose File</span>
+                        <input type="file" id="file-marksheet" accept="image/*,application/pdf" onchange="handleFileSelect('marksheet')">
                     </div>
-                    <div class="flex justify-between py-1 text-[10px] border-b border-gray-200">
-                        <span class="max-w-[220px]">Examination Fee (Fine Arts)</span>
-                        <span id="recFeeItem" class="font-bold">--</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Upload Aadhar Card Front Side *</label>
+                    <div class="file-upload-box" onclick="document.getElementById('file-aadhar-front').click()">
+                        <span class="file-upload-label" id="label-aadhar-front">Choose File</span>
+                        <input type="file" id="file-aadhar-front" accept="image/*,application/pdf" onchange="handleFileSelect('aadhar-front')">
                     </div>
                 </div>
 
-                <!-- Total -->
-                <div class="space-y-1 pt-1 pb-2 border-b border-dashed border-gray-300">
-                    <div class="flex justify-between text-xs font-bold">
-                        <span>TOTAL AMOUNT:</span>
-                        <span id="recTotalFee" class="text-sm">--</span>
-                    </div>
-                    <div class="text-[10px] text-gray-500 italic">
-                        In Words: <span id="recFeeWords" class="font-semibold text-gray-700 uppercase">--</span>
+                <div class="form-group">
+                    <label>Upload Aadhar Card Back Side *</label>
+                    <div class="file-upload-box" onclick="document.getElementById('file-aadhar-back').click()">
+                        <span class="file-upload-label" id="label-aadhar-back">Choose File</span>
+                        <input type="file" id="file-aadhar-back" accept="image/*,application/pdf" onchange="handleFileSelect('aadhar-back')">
                     </div>
                 </div>
+            </div>
 
-                <!-- Barcode & Stamp -->
-                <div class="text-center pt-2 space-y-1">
-                    <div class="inline-block bg-white p-1">
-                        <svg id="receiptBarcode" class="mx-auto h-10 w-48 object-contain"></svg>
-                    </div>
-                    <p id="recBarcodeText" class="text-[9px] text-gray-500 font-mono tracking-widest">--</p>
+            <button class="btn" onclick="goToScreen3()">Proceed to Payment</button>
+            <button class="btn btn-secondary" onclick="switchScreen('screen-1')">Back</button>
+        </div>
+
+        <!-- SCREEN 3: Payment Gateway -->
+        <div id="screen-3" class="screen">
+            <h2>Exam Fee Payment</h2>
+            <p class="subtitle">Complete payment within the 10-minute time limit</p>
+
+            <div class="payment-box">
+                <p style="font-size:14px; color:var(--text-secondary);">Exam Fee</p>
+                <h3 id="display-fee-amount" style="font-size:30px; margin:6px 0; color:var(--accent-color);">₹0</h3>
+                <p style="font-size:13px; color:var(--text-secondary);" id="display-fee-details">Student specific exam fee</p>
+                
+                <div class="qr-code">
+                    <img id="upi-qr" src="" alt="UPI QR Code" style="width:100%; height:100%; object-fit:contain;">
                 </div>
-
-                <!-- Verified Badge Box -->
-                <div class="bg-indigo-50/60 border border-indigo-100 rounded-lg p-2 text-center text-[10px] text-indigo-900 font-medium space-y-0.5">
-                    <div>✨ DIGITALLY VERIFIED E-RECEIPT • VALID WITHOUT MANUAL SIGNATURE ✨</div>
+                
+                <p style="font-size:14px; font-weight:600;">UPI ID: <span id="upi-id-text" style="color:var(--accent-color);">sdarpan128@oksbi</span></p>
+                
+                <div class="payment-links">
+                    <a href="#" id="gpay-link" class="pay-app-btn">Google Pay</a>
+                    <a href="#" id="phonepe-link" class="pay-app-btn">PhonePe</a>
+                    <a href="#" id="paytm-link" class="pay-app-btn">Paytm</a>
                 </div>
+            </div>
 
-                <div class="text-center pt-2 text-[10px] font-bold text-gray-700">
+            <div class="form-group">
+                <label>Upload Payment Proof Screenshot *</label>
+                <div class="file-upload-box" onclick="document.getElementById('file-payment').click()">
+                    <span class="file-upload-label" id="label-payment">Choose Screenshot</span>
+                    <input type="file" id="file-payment" accept="image/*" onchange="handleFileSelect('payment')">
+                </div>
+            </div>
+
+            <button class="btn" id="btn-generate" onclick="submitAndGenerateReceipt()" disabled>Submit & Generate Receipt</button>
+            <button class="btn btn-secondary" onclick="switchScreen('screen-2')">Back</button>
+        </div>
+
+        <!-- SCREEN 4: Receipt Confirmation -->
+        <div id="screen-4" class="screen">
+            <!-- Green Tick Animation & Success Message Banner -->
+            <div class="success-banner">
+                <div class="success-checkmark">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                    </svg>
+                </div>
+                <h3 style="font-size:18px; color:#22543D; margin-bottom:4px;">Form Fillup Successful!</h3>
+                <p style="font-size:13px; color:#2F855A;">Your examination form has been submitted and verified successfully.</p>
+            </div>
+
+            <div id="receipt-card">
+                <div class="rec-top-title">EXAMINATION FEE RECEIPT</div>
+                <div class="rec-sub-title">ANNUAL PRACTICAL FINE ARTS (PAINTING) EXAMINATION</div>
+                <div class="rec-inst-title" id="rec-inst"></div>
+                <div class="rec-session">Session 2026-27 | Darpan Sukla</div>
+                
+                <div class="rec-line"></div>
+                
+                <div class="rec-row"><span>Receipt No:</span><span id="rec-regid"></span></div>
+                <div class="rec-row"><span>Date & Time:</span><span id="rec-time"></span></div>
+                <div class="rec-row"><span>Student Name:</span><span id="rec-name"></span></div>
+                <div class="rec-row"><span>Father's/Guardian:</span><span id="rec-father"></span></div>
+                <div class="rec-row"><span>Mother's/Guardian:</span><span id="rec-mother"></span></div>
+                <div class="rec-row"><span>WhatsApp Mobile:</span><span id="rec-mobile"></span></div>
+                <div class="rec-row"><span>Class Enrolled:</span><span id="rec-sub"></span></div>
+                <div class="rec-row"><span>Payment Mode:</span><span style="color:#0071E3;">Online Payment Mode</span></div>
+                <div class="rec-row"><span>Payment Status:</span><span style="color:#34C759;">VERIFIED / PAID</span></div>
+                
+                <div class="rec-line"></div>
+                
+                <div class="rec-table-header">
+                    <span>Description</span>
+                    <span>Amount</span>
+                </div>
+                
+                <div class="rec-line" style="margin:4px 0;"></div>
+                
+                <div class="rec-row"><span>Examination Fee (Fine Arts)</span><span id="rec-fee-num1"></span></div>
+                
+                <div class="rec-line"></div>
+                
+                <div class="rec-row" style="font-size:13px; font-weight:bold;"><span>TOTAL AMOUNT:</span><span id="rec-fee-num2"></span></div>
+                
+                <div class="rec-row" style="font-size:11px; margin-top:4px; font-style:italic;"><span>In Words:</span><span id="rec-in-words"></span></div>
+                
+                <!-- Real Standard Barcode Canvas -->
+                <div class="barcode-container">
+                    <canvas id="real-barcode-canvas"></canvas>
+                    <div style="font-size:10px; font-weight:bold; margin-top:2px; letter-spacing:2px;" id="rec-barcode-text"></div>
+                </div>
+                
+                <div class="digital-stamp">
+                    ✨ DIGITALLY VERIFIED E-RECEIPT • VALID WITHOUT MANUAL SIGNATURE ✨
+                </div>
+                
+                <div style="text-align:center; font-size:11px; font-weight:bold; margin-top:14px;">
                     Thank You for Your Payment!
                 </div>
             </div>
 
-            <div class="pt-2">
-                <button onclick="resetPortal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-2xl text-xs border border-gray-200">
-                    <i class="fa-solid fa-rotate-right"></i> Register Another Student
-                </button>
-            </div>
-        </section>
+            <button class="btn" onclick="downloadReceiptImage()" style="margin-top:20px;">Download Receipt Copy</button>
+        </div>
 
-    </main>
+    </div>
 
-    <!-- Footer -->
-    <footer class="w-full py-5 text-center text-[11px] text-gray-400 font-medium border-t border-gray-100 bg-white/40 mt-6">
+    <!-- Footer Branding -->
+    <div class="app-footer">
         Made by Darpan Sukla
-    </footer>
+    </div>
+</div>
 
-    <!-- Script Application Logic -->
-    <script>
-        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9MYoRpbaJg7oK3vqkTjfsm616eD9xvUeeE3DxTSzWCF5gCdBOdqfnQQbbwbnycXopvrScE5kg-3R6/pub?gid=0&single=true&output=csv";
-        const APPS_SCRIPT_WEB_URL = "https://script.google.com/macros/s/AKfycbzxcjMyWBGVHxKLvmdgT9jHG2zBEGNJtmHa8q4tjP15DN7LFjGZqIlhWsD4noueXOfKGg/exec";
+<script>
+    const SHEET_1_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR9MYoRpbaJg7oK3vqkTjfsm616eD9xvUeeE3DxTSzWCF5gCdBOdqfnQQbbwbnycXopvrScE5kg-3R6/pub?gid=0&single=true&output=csv";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyQEcqraKvv0TK9rReygJilSl6B2wAXfRt1Vu71-y9SgTj_eUIEWlw2vQYQy_fu9fa0/exec";
+    const UPI_ID = "sdarpan128@oksbi";
+
+    let studentsData = [];
+    let selectedStudent = null;
+    let timerInterval = null;
+    let timeLeft = 600; // 10 Minutes timer strictly for payment
+    let generatedRegId = "";
+
+    let fileBase64Data = {
+        marksheet: "",
+        'aadhar-front': "",
+        'aadhar-back': "",
+        payment: ""
+    };
+
+    let uploadedFiles = {
+        marksheet: false,
+        'aadhar-front': false,
+        'aadhar-back': false,
+        payment: false
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadSheetData();
+        setupEventListeners();
+    });
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
         
-        let sheetRows = [];
-        let currentSchool = "";
-        let schoolStudents = [];
-        let activeStudent = null;
-        let parentStatusState = {
-            father: 'alive',
-            mother: 'alive'
-        };
+        if(screenId === 'screen-3') {
+            if(!timerInterval) {
+                startTimer();
+            }
+        } else {
+            if(timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            document.getElementById('timer-display').style.display = 'none';
+        }
+    }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadGoogleSheetData();
+    function loadSheetData() {
+        Papa.parse(SHEET_1_URL, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                studentsData = results.data.filter(row => row['Institution'] && row['Student Name']);
+                populateInstitutions();
+            }
+        });
+    }
+
+    function populateInstitutions() {
+        const institutions = [...new Set(studentsData.map(item => item['Institution'].trim()))];
+        const select = document.getElementById('select-institution');
+        institutions.forEach(inst => {
+            if(inst) {
+                let opt = document.createElement('option');
+                opt.value = inst;
+                opt.textContent = inst;
+                select.appendChild(opt);
+            }
+        });
+    }
+
+    function setupEventListeners() {
+        const instSelect = document.getElementById('select-institution');
+        const searchInput = document.getElementById('search-name-input');
+        const searchGroup = document.getElementById('search-group');
+
+        instSelect.addEventListener('change', (e) => {
+            if(e.target.value) {
+                searchGroup.style.display = 'block';
+                searchInput.value = '';
+                document.getElementById('search-results').style.display = 'none';
+            } else {
+                searchGroup.style.display = 'none';
+            }
         });
 
-        function convertGoogleDriveUrl(url) {
-            if (!url) return '';
-            let cleanUrl = url.trim();
-            let fileIdMatch = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || cleanUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-            if (fileIdMatch && fileIdMatch[1]) {
-                let fileId = fileIdMatch[1];
-                return `https://lh3.googleusercontent.com/d/${fileId}`;
-            }
-            return cleanUrl;
-        }
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toUpperCase();
+            const inst = instSelect.value;
+            const resultsBox = document.getElementById('search-results');
+            resultsBox.innerHTML = '';
 
-        async function loadGoogleSheetData() {
-            const statusIndicator = document.getElementById('connectionStatus');
-            const statusText = document.getElementById('statusText');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            
-            loadingIndicator.classList.remove('hidden');
-
-            try {
-                const response = await fetch(SHEET_CSV_URL);
-                const csvText = await response.text();
-                parseCSVData(csvText);
-
-                statusIndicator.className = "flex items-center space-x-1.5 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100";
-                statusIndicator.querySelector('span').className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
-                statusText.innerText = "Connected";
-            } catch (error) {
-                console.error("Error loading sheet:", error);
-                statusIndicator.className = "flex items-center space-x-1.5 text-[11px] font-medium text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100";
-                statusIndicator.querySelector('span').className = "w-1.5 h-1.5 rounded-full bg-rose-500";
-                statusText.innerText = "Failed";
-            } finally {
-                loadingIndicator.classList.add('hidden');
-            }
-        }
-
-        function parseCSVLine(text) {
-            let cols = [];
-            let current = '';
-            let inQuotes = false;
-            for (let char of text) {
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    cols.push(current.trim().replace(/^"|"$/g, ''));
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            cols.push(current.trim().replace(/^"|"$/g, ''));
-            return cols;
-        }
-
-        function parseCSVData(text) {
-            let lines = text.split('\n');
-            let parsed = [];
-            for (let i = 1; i < lines.length; i++) {
-                let row = lines[i].trim();
-                if (!row) continue;
-                let cols = parseCSVLine(row);
-
-                parsed.push({
-                    timestamp: cols[0] || '',
-                    registrationId: cols[1] || '',
-                    institution: cols[2] || '',
-                    studentName: cols[3] || '',
-                    fatherName: cols[4] || '',
-                    motherName: cols[5] || '',
-                    address: cols[6] || '',
-                    pincode: cols[7] || '',
-                    mobile: cols[8] || '',
-                    dob: cols[9] || '',
-                    age: cols[10] || '',
-                    sex: cols[11] || '',
-                    nationality: cols[12] || '',
-                    motherTongue: cols[13] || '',
-                    subject: cols[15] || '',
-                    appearingFineArtsClass: cols[16] || '',
-                    passportPhotoUrl: convertGoogleDriveUrl(cols[17] || ''),
-                    birthCertificateUrl: convertGoogleDriveUrl(cols[18] || ''),
-                    previousMarksheetUrl: convertGoogleDriveUrl(cols[19] || ''),
-                    paymentProofUrl: convertGoogleDriveUrl(cols[20] || ''),
-                    examFee: cols[21] || '500'
-                });
-            }
-            sheetRows = parsed;
-            populateSchools();
-        }
-
-        function populateSchools() {
-            const schoolSelect = document.getElementById('schoolSelect');
-            const schools = [...new Set(sheetRows.map(r => r.institution))].filter(Boolean);
-            let html = '<option value="" disabled selected>Choose institution...</option>';
-            schools.forEach(s => {
-                html += `<option value="${s}">${s}</option>`;
-            });
-            schoolSelect.innerHTML = html;
-        }
-
-        function loadSchoolStudents() {
-            const school = document.getElementById('schoolSelect').value;
-            if (!school) {
-                alert('Please select an institution first.');
-                return;
-            }
-            currentSchool = school;
-            document.getElementById('displaySelectedSchool').innerText = school;
-            document.getElementById('searchInput').value = '';
-            document.getElementById('studentsGrid').innerHTML = '';
-            document.getElementById('searchInstruction').classList.remove('hidden');
-
-            schoolStudents = sheetRows.filter(r => r.institution.toLowerCase() === school.toLowerCase() || r.institution === school);
-            switchScreen(2);
-        }
-
-        function switchScreen(screenNum) {
-            for (let i = 1; i <= 5; i++) {
-                document.getElementById(`screen${i}`).classList.add('hidden');
-            }
-            document.getElementById(`screen${screenNum}`).classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function goBackToScreen(screenNum) {
-            switchScreen(screenNum);
-        }
-
-        function filterStudents() {
-            const query = document.getElementById('searchInput').value.trim().toLowerCase();
-            const grid = document.getElementById('studentsGrid');
-            const instruction = document.getElementById('searchInstruction');
-
-            if (!query) {
-                grid.innerHTML = '';
-                instruction.classList.remove('hidden');
-                instruction.innerText = "Please type the full first name of the student...";
+            if(query.length < 3) {
+                resultsBox.style.display = 'none';
                 return;
             }
 
-            instruction.classList.add('hidden');
-            
-            const filtered = schoolStudents.filter(s => {
-                const firstName = s.studentName.trim().split(/\s+/)[0].toLowerCase();
+            const matches = studentsData.filter(s => {
+                if(s['Institution'].trim() !== inst) return false;
+                const fullName = s['Student Name'].toUpperCase().trim();
+                const firstName = fullName.split(' ')[0];
                 return firstName === query;
             });
 
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="py-8 text-center text-gray-400 text-xs">No student found matching that full first name.</div>`;
-                return;
-            }
-
-            let html = '';
-            filtered.forEach((student) => {
-                let lookupIndex = schoolStudents.indexOf(student);
-
-                html += `
-                    <div onclick="openStudentProfile(${lookupIndex})" class="liquid-card rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all border border-gray-100 active:scale-[0.99] text-center">
-                        <h3 class="text-xs font-bold text-gray-900">${student.studentName}</h3>
-                    </div>
-                `;
-            });
-            grid.innerHTML = html;
-        }
-
-        function toggleFieldEdit(fieldId, btnElement) {
-            const input = document.getElementById(fieldId);
-            if (input.readOnly) {
-                input.readOnly = false;
-                input.classList.remove('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-                input.classList.add('bg-white', 'text-gray-800', 'ring-2', 'ring-blue-500/20');
-                btnElement.innerText = "Lock";
-                btnElement.className = "text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md hover:bg-rose-100";
-            } else {
-                input.readOnly = true;
-                input.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-                input.classList.remove('bg-white', 'text-gray-800', 'ring-2', 'ring-blue-500/20');
-                btnElement.innerText = "Edit";
-                btnElement.className = "text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100";
-            }
-        }
-
-        function setParentStatus(parentType, status) {
-            parentStatusState[parentType] = status;
-            const aliveBtn = document.getElementById(`${parentType}AliveBtn`);
-            const lateBtn = document.getElementById(`${parentType}LateBtn`);
-            const inputField = document.getElementById(parentType === 'father' ? 'editFatherName' : 'editMotherName');
-            
-            let currentVal = inputField.value.replace(/^(late|LATE)\s+/i, '').trim();
-
-            if (status === 'late') {
-                lateBtn.className = "px-2 py-0.5 rounded-md bg-white text-gray-800 shadow-sm transition-all";
-                aliveBtn.className = "px-2 py-0.5 rounded-md text-gray-500 transition-all";
-                if (currentVal) {
-                    inputField.value = `LATE ${currentVal}`;
-                }
-            } else {
-                aliveBtn.className = "px-2 py-0.5 rounded-md bg-white text-gray-800 shadow-sm transition-all";
-                lateBtn.className = "px-2 py-0.5 rounded-md text-gray-500 transition-all";
-                inputField.value = currentVal;
-            }
-        }
-
-        function openStudentProfile(index) {
-            const student = schoolStudents[index];
-            activeStudent = student;
-
-            parentStatusState.father = 'alive';
-            parentStatusState.mother = 'alive';
-            setParentStatus('father', 'alive');
-            setParentStatus('mother', 'alive');
-
-            document.getElementById('profileRegId').innerText = `ID: ${student.registrationId || '--'}`;
-            document.getElementById('editRegId').value = student.registrationId || '';
-            document.getElementById('editInstitution').value = student.institution || '';
-            document.getElementById('editDob').value = student.dob || '';
-            document.getElementById('editAge').value = student.age || '';
-            document.getElementById('editSex').value = student.sex || '';
-            document.getElementById('editFineArtsClass').value = student.appearingFineArtsClass || '';
-            
-            document.getElementById('editNationality').value = student.nationality || '';
-            document.getElementById('editMotherTongue').value = student.motherTongue || '';
-            document.getElementById('editSubject').value = student.subject || '';
-
-            const editableFields = ['editStudentName', 'editFatherName', 'editMotherName', 'editAddress', 'editPincode', 'editMobile'];
-            editableFields.forEach(id => {
-                const el = document.getElementById(id);
-                el.readOnly = true;
-                el.classList.add('bg-gray-100', 'cursor-not-allowed', 'text-gray-500');
-                el.classList.remove('bg-white', 'text-gray-800', 'ring-2', 'ring-blue-500/20');
-            });
-
-            document.getElementById('editStudentName').value = student.studentName || '';
-            document.getElementById('editFatherName').value = student.fatherName || '';
-            document.getElementById('editMotherName').value = student.motherName || '';
-            document.getElementById('editAddress').value = student.address || '';
-            document.getElementById('editPincode').value = student.pincode || '';
-            document.getElementById('editMobile').value = student.mobile || '';
-            
-            document.getElementById('editEduQualification').selectedIndex = 0;
-
-            document.querySelectorAll('#studentEditForm button[type="button"]').forEach(btn => {
-                if (btn.innerText === "Lock") {
-                    btn.innerText = "Edit";
-                    btn.className = "text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100";
-                }
-            });
-
-            const visharadSection = document.getElementById('visharadUploadSection');
-            const marksheetInput = document.getElementById('uploadMarksheet');
-            const aadharInput = document.getElementById('uploadAadhar');
-            
-            const fineArtsClass = (student.appearingFineArtsClass || "").trim();
-            if (fineArtsClass === "Chitra Visharad Part-1 (4th Year)" || fineArtsClass === "Chitra Visharad Final (5th Year)") {
-                visharadSection.classList.remove('hidden');
-                marksheetInput.required = true;
-                aadharInput.required = true;
-            } else {
-                visharadSection.classList.add('hidden');
-                marksheetInput.required = false;
-                aadharInput.required = false;
-            }
-
-            const photoContainer = document.getElementById('profilePhotoContainer');
-            if (student.passportPhotoUrl) {
-                photoContainer.innerHTML = `<img src="${student.passportPhotoUrl}" alt="${student.studentName}" class="w-full h-full object-cover" onerror="this.innerHTML='<i class=\'fa-solid fa-user text-2xl text-gray-300\'></i>'">`;
-            } else {
-                photoContainer.innerHTML = `<i class="fa-solid fa-user text-2xl text-gray-300"></i>`;
-            }
-
-            switchScreen(3);
-        }
-
-        function proceedToPayment(event) {
-            event.preventDefault();
-            if (!activeStudent) return;
-
-            const pincodeVal = document.getElementById('editPincode').value;
-            const mobileVal = document.getElementById('editMobile').value;
-
-            if (pincodeVal.length !== 6) {
-                alert('Pincode must be exactly 6 digits.');
-                return;
-            }
-
-            if (mobileVal.length !== 10) {
-                alert('Mobile (WhatsApp) must be exactly 10 digits.');
-                return;
-            }
-
-            activeStudent.studentName = document.getElementById('editStudentName').value;
-            activeStudent.fatherName = document.getElementById('editFatherName').value;
-            activeStudent.motherName = document.getElementById('editMotherName').value;
-            activeStudent.address = document.getElementById('editAddress').value;
-            activeStudent.pincode = pincodeVal;
-            activeStudent.mobile = mobileVal;
-            activeStudent.educationalQualification = document.getElementById('editEduQualification').value;
-
-            let feeAmount = activeStudent.examFee || "500";
-            document.getElementById('payDisplayFee').innerText = `₹${feeAmount}`;
-
-            let remarks = `${activeStudent.studentName} - ${activeStudent.appearingFineArtsClass}`;
-            document.getElementById('qrDefaultRemarks').innerText = remarks;
-
-            let upiString = `upi://pay?pa=sdarpan128@oksbi&pn=Exam%20Fee&am=${feeAmount}&cu=INR&tn=${encodeURIComponent(remarks)}`;
-            document.getElementById('qrCodeImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiString)}`;
-
-            // Set Direct App UPI Deeplinks with default remarks & amount
-            document.getElementById('gpayBtn').href = upiString;
-            document.getElementById('phonepeBtn').href = upiString;
-            document.getElementById('paytmBtn').href = upiString;
-
-            switchScreen(4);
-        }
-
-        function getFileBase64(file) {
-            return new Promise((resolve, reject) => {
-                if (!file) {
-                    resolve("");
-                    return;
-                }
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
-            });
-        }
-
-        function numberToWords(num) {
-            let a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen '];
-            let b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-            
-            let n = parseInt(num);
-            if (n === 0) return 'zero';
-            if (n < 20) return a[n];
-            if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
-            if (n < 1000) return a[Math.floor(n / 100)] + 'hundred ' + (n % 100 !== 0 ? 'and ' + numberToWords(n % 100) : '');
-            if (n < 100000) return numberToWords(Math.floor(n / 1000)) + 'thousand ' + (n % 1000 !== 0 ? numberToWords(n % 1000) : '');
-            return num.toString();
-        }
-
-        function generateMockBarcodeSVG(text) {
-            let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" width="100%" height="40">`;
-            svg += `<rect width="200" height="50" fill="#ffffff"/>`;
-            let x = 10;
-            let pattern = [2, 1, 3, 1, 1, 2, 4, 1, 2, 1, 3, 2, 1, 1, 4, 2, 1, 3, 1, 2, 3, 1, 1, 2, 4, 1, 2];
-            for (let i = 0; i < pattern.length; i++) {
-                let w = pattern[i];
-                svg += `<rect x="${x}" y="5" width="${w * 2}" height="32" fill="#000000"/>`;
-                x += w * 2 + 3;
-            }
-            svg += `<text x="100" y="46" font-family="monospace" font-size="8" text-anchor="middle" fill="#333333">${text}</text>`;
-            svg += `</svg>`;
-            return "data:image/svg+xml;base64," + btoa(svg);
-        }
-
-        async function completeSubmission(event) {
-            event.preventDefault();
-            const proofInput = document.getElementById('uploadPaymentProof');
-            if (!proofInput.files || proofInput.files.length === 0) {
-                alert('Payment proof upload is mandatory.');
-                return;
-            }
-
-            const submitBtn = event.target.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i><span>Please wait generating receipt</span>`;
-            submitBtn.disabled = true;
-
-            try {
-                let marksheetFile = document.getElementById('uploadMarksheet')?.files[0];
-                let aadharFile = document.getElementById('uploadAadhar')?.files[0];
-                let paymentProofFile = proofInput.files[0];
-
-                let paymentProofBase64 = await getFileBase64(paymentProofFile);
-                let marksheetBase64 = await getFileBase64(marksheetFile);
-                let aadharBase64 = await getFileBase64(aadharFile);
-
-                let payload = {
-                    registrationId: activeStudent.registrationId,
-                    institution: activeStudent.institution,
-                    studentName: activeStudent.studentName,
-                    fatherName: activeStudent.fatherName,
-                    motherName: activeStudent.motherName,
-                    address: activeStudent.address,
-                    pincode: activeStudent.pincode,
-                    mobile: activeStudent.mobile,
-                    dob: activeStudent.dob,
-                    age: activeStudent.age,
-                    sex: activeStudent.sex,
-                    nationality: activeStudent.nationality,
-                    motherTongue: activeStudent.motherTongue,
-                    educationalQualification: activeStudent.educationalQualification,
-                    subject: activeStudent.subject,
-                    appearingFineArtsClass: activeStudent.appearingFineArtsClass,
-                    examFee: activeStudent.examFee || '500',
-                    passportPhoto: activeStudent.passportPhotoUrl || "",
-                    paymentProof: paymentProofBase64,
-                    marksheet: marksheetBase64,
-                    aadhar: aadharBase64
-                };
-
-                await fetch(APPS_SCRIPT_WEB_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(payload)
+            if(matches.length > 0) {
+                resultsBox.style.display = 'block';
+                matches.forEach(m => {
+                    let div = document.createElement('div');
+                    div.className = 'search-item';
+                    div.textContent = m['Student Name'];
+                    div.onclick = () => {
+                        selectedStudent = m;
+                        searchInput.value = m['Student Name'];
+                        resultsBox.style.display = 'none';
+                        document.getElementById('btn-to-screen-2').disabled = false;
+                    };
+                    resultsBox.appendChild(div);
                 });
+            } else {
+                resultsBox.style.display = 'none';
+            }
+        });
 
-                let nowStr = new Date().toLocaleString();
-                let receiptNo = `REC-${Math.floor(100000 + Math.random() * 900000)}`;
-                let feeAmt = activeStudent.examFee || '500';
+        document.getElementById('btn-to-screen-2').addEventListener('click', () => {
+            if(selectedStudent) {
+                populateScreen2();
+                switchScreen('screen-2');
+            }
+        });
 
-                document.getElementById('recReceiptNo').innerText = receiptNo;
-                document.getElementById('receiptTimestamp').innerText = nowStr;
-                document.getElementById('recInstitutionName').innerText = activeStudent.institution || '--';
-                document.getElementById('recStudentName').innerText = activeStudent.studentName || '--';
-                document.getElementById('recFather').innerText = activeStudent.fatherName || '--';
-                document.getElementById('recMobile').innerText = activeStudent.mobile || '--';
-                document.getElementById('recClass').innerText = `${activeStudent.appearingFineArtsClass || '--'}`;
-                document.getElementById('recFeeItem').innerText = feeAmt;
-                document.getElementById('recTotalFee').innerText = feeAmt;
-                document.getElementById('recFeeWords').innerText = `${numberToWords(feeAmt).toUpperCase()}RUPEES ONLY`;
-                
-                let barcodeDataUri = generateMockBarcodeSVG(receiptNo);
-                document.getElementById('receiptBarcode').outerHTML = `<img id="receiptBarcode" src="${barcodeDataUri}" class="mx-auto h-9 w-48 object-contain">`;
-                document.getElementById('recBarcodeText').innerText = receiptNo;
+        document.getElementById('val-pincode').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+        });
+        document.getElementById('val-mobile').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+        });
+    }
 
-                switchScreen(5);
+    function convertGoogleDriveUrl(url) {
+        if(!url) return '';
+        let fileId = '';
+        if(url.includes('drive.google.com')) {
+            if(url.includes('/d/')) {
+                const parts = url.split('/d/');
+                if(parts[1]) fileId = parts[1].split('/')[0];
+            } else if(url.includes('id=')) {
+                const urlParams = new URLSearchParams(url.split('?')[1]);
+                fileId = urlParams.get('id');
+            }
+        }
+        if(fileId) {
+            return `https://lh3.googleusercontent.com/d/${fileId}=s400`;
+        }
+        return url;
+    }
 
-            } catch (error) {
-                console.error("Submission error:", error);
-                alert("Failed to save data. Please check your network connection and try again.");
-            } finally {
-                submitBtn.innerHTML = originalBtnText;
-                submitBtn.disabled = false;
+    function populateScreen2() {
+        const rawPhotoUrl = selectedStudent['Passport Photo URL'] || '';
+        document.getElementById('preview-photo').src = convertGoogleDriveUrl(rawPhotoUrl);
+
+        document.getElementById('val-institution').value = selectedStudent['Institution'] || '';
+        document.getElementById('val-student-name').value = selectedStudent['Student Name'] || '';
+        
+        document.getElementById('father-toggle').checked = false;
+        handleFatherToggle();
+        document.getElementById('val-father-name').value = selectedStudent['Father\'s Name'] || '';
+
+        document.getElementById('mother-toggle').checked = false;
+        handleMotherToggle();
+        document.getElementById('val-mother-name').value = selectedStudent['Mother\'s Name'] || '';
+
+        document.getElementById('val-address').value = selectedStudent['Address'] || '';
+        document.getElementById('val-pincode').value = selectedStudent['Pincode'] || '';
+        document.getElementById('val-mobile').value = selectedStudent['Mobile (WhatsApp)'] || '';
+        document.getElementById('val-nationality').value = selectedStudent['Nationality'] || 'Indian';
+        document.getElementById('val-mother-tongue').value = selectedStudent['Mother Tongue'] || '';
+        document.getElementById('val-dob').value = selectedStudent['Date of Birth'] || '';
+        document.getElementById('val-age').value = selectedStudent['Age'] || '';
+        document.getElementById('val-sex').value = selectedStudent['Sex'] || '';
+        document.getElementById('val-subject').value = selectedStudent['Subject'] || '';
+        document.getElementById('val-fine-class').value = selectedStudent['Appearing Fine Arts Class'] || '';
+
+        const fineArtsClass = (selectedStudent['Appearing Fine Arts Class'] || '').trim();
+        const visharadUploads = document.getElementById('visharad-uploads');
+        if(fineArtsClass.toLowerCase().includes('visharad')) {
+            visharadUploads.style.display = 'block';
+        } else {
+            visharadUploads.style.display = 'none';
+        }
+    }
+
+    function handleFatherToggle() {
+        const isLate = document.getElementById('father-toggle').checked;
+        const stateLabel = document.getElementById('father-state-label');
+        let fInput = document.getElementById('val-father-name');
+        let currentVal = fInput.value.replace(/^LATE\s+/i, '').trim();
+
+        if(isLate) {
+            stateLabel.textContent = "Late";
+            stateLabel.style.color = "var(--error-color)";
+            fInput.value = "LATE " + currentVal;
+        } else {
+            stateLabel.textContent = "Alive";
+            stateLabel.style.color = "var(--success-color)";
+            fInput.value = currentVal;
+        }
+    }
+
+    function handleMotherToggle() {
+        const isLate = document.getElementById('mother-toggle').checked;
+        const stateLabel = document.getElementById('mother-state-label');
+        let mInput = document.getElementById('val-mother-name');
+        let currentVal = mInput.value.replace(/^LATE\s+/i, '').trim();
+
+        if(isLate) {
+            stateLabel.textContent = "Late";
+            stateLabel.style.color = "var(--error-color)";
+            mInput.value = "LATE " + currentVal;
+        } else {
+            stateLabel.textContent = "Alive";
+            stateLabel.style.color = "var(--success-color)";
+            mInput.value = currentVal;
+        }
+    }
+
+    function handleFileSelect(type) {
+        const fileInput = document.getElementById(`file-${type}`);
+        const label = document.getElementById(`label-${type}`);
+        if(fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                fileBase64Data[type] = e.target.result;
+                label.textContent = "File Selected ✓";
+                label.style.color = "var(--success-color)";
+                uploadedFiles[type] = true;
+                checkPaymentReady();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function goToScreen3() {
+        const eduQual = document.getElementById('val-edu-qual').value;
+        if(!eduQual) {
+            alert("Please select your Educational Qualification.");
+            return;
+        }
+
+        const fineArtsClass = (selectedStudent['Appearing Fine Arts Class'] || '').trim();
+        if(fineArtsClass.toLowerCase().includes('visharad')) {
+            if(!uploadedFiles['marksheet'] || !uploadedFiles['aadhar-front'] || !uploadedFiles['aadhar-back']) {
+                alert("Please upload all mandatory documents (Marksheet & Aadhar Card Front/Back) for Visharad class.");
+                return;
             }
         }
 
-        function downloadReceiptImage() {
-            const receiptElement = document.getElementById('receiptCard');
-            html2canvas(receiptElement, { scale: 2 }).then(canvas => {
-                let link = document.createElement('a');
-                link.download = `Receipt_${activeStudent.registrationId || 'Student'}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            });
+        const pincode = document.getElementById('val-pincode').value;
+        const mobile = document.getElementById('val-mobile').value;
+        if(pincode.length !== 6) {
+            alert("Pincode must be exactly 6 digits.");
+            return;
+        }
+        if(mobile.length !== 10) {
+            alert("Mobile/WhatsApp number must be exactly 10 digits.");
+            return;
         }
 
-        function resetPortal() {
-            activeStudent = null;
-            document.getElementById('studentEditForm').reset();
-            switchScreen(1);
+        setupPaymentInfo();
+        switchScreen('screen-3');
+    }
+
+    function getFeeAmount() {
+        for(let key in selectedStudent) {
+            if(key.toLowerCase().includes('fee') || key.toLowerCase().includes('column v')) {
+                let val = selectedStudent[key];
+                if(val && !isNaN(val)) {
+                    return val.toString().trim();
+                }
+            }
         }
-    </script>
+        return "500";
+    }
+
+    function setupPaymentInfo() {
+        const inst = selectedStudent['Institution'].trim();
+        const fineArtsClass = (selectedStudent['Appearing Fine Arts Class'] || '').trim();
+        const feeAmount = getFeeAmount();
+
+        document.getElementById('display-fee-amount').textContent = `₹${feeAmount}`;
+        document.getElementById('display-fee-details').textContent = `${fineArtsClass} | ${inst}`;
+
+        const studentName = document.getElementById('val-student-name').value.trim();
+        const remark = encodeURIComponent(`${studentName} - ${fineArtsClass}`);
+        const upiLinkString = `upi://pay?pa=${UPI_ID}&pn=Darpan%20Exam&am=${feeAmount}&cu=INR&tn=${remark}`;
+
+        document.getElementById('upi-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiLinkString)}`;
+
+        document.getElementById('gpay-link').href = upiLinkString;
+        document.getElementById('phonepe-link').href = upiLinkString;
+        document.getElementById('paytm-link').href = upiLinkString;
+    }
+
+    function checkPaymentReady() {
+        if(uploadedFiles['payment']) {
+            document.getElementById('btn-generate').disabled = false;
+        }
+    }
+
+    function startTimer() {
+        timeLeft = 600;
+        const display = document.getElementById('timer-display');
+        display.style.display = 'block';
+        timerInterval = setInterval(() => {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            if (--timeLeft < 0) {
+                clearInterval(timerInterval);
+                alert("Payment time expired. Please restart the form.");
+                location.reload();
+            }
+        }, 1000);
+    }
+
+    function convertNumberToWords(amount) {
+        const units = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN'];
+        const tens = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY'];
+        
+        let num = parseInt(amount, 10);
+        if (isNaN(num) || num === 0) return 'ZERO RUPEES ONLY';
+        
+        let words = '';
+        if (num >= 1000) {
+            words += units[Math.floor(num / 1000)] + ' THOUSAND ';
+            num %= 1000;
+        }
+        if (num >= 100) {
+            words += units[Math.floor(num / 100)] + ' HUNDRED ';
+            num %= 100;
+        }
+        if (num >= 20) {
+            words += tens[Math.floor(num / 10)] + ' ';
+            num %= 10;
+        }
+        if (num > 0) {
+            words += units[num] + ' ';
+        }
+        return words.trim() + ' RUPEES ONLY';
+    }
+
+    function submitAndGenerateReceipt() {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.style.display = 'flex';
+
+        const payload = {
+            institution: document.getElementById('val-institution').value,
+            studentName: document.getElementById('val-student-name').value,
+            fatherName: document.getElementById('val-father-name').value,
+            motherName: document.getElementById('val-mother-name').value,
+            address: document.getElementById('val-address').value,
+            pincode: document.getElementById('val-pincode').value,
+            mobile: document.getElementById('val-mobile').value,
+            nationality: document.getElementById('val-nationality').value,
+            motherTongue: document.getElementById('val-mother-tongue').value,
+            dob: document.getElementById('val-dob').value,
+            age: document.getElementById('val-age').value,
+            sex: document.getElementById('val-sex').value,
+            eduQual: document.getElementById('val-edu-qual').value,
+            subject: document.getElementById('val-subject').value,
+            fineClass: document.getElementById('val-fine-class').value,
+            feeAmount: getFeeAmount(),
+            files: fileBase64Data
+        };
+
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(result => {
+            loadingOverlay.style.display = 'none';
+            if(result.status === "success") {
+                generatedRegId = result.registrationId;
+                renderReceiptView(generatedRegId);
+            } else {
+                alert("Error saving data: " + result.message);
+            }
+        })
+        .catch(error => {
+            loadingOverlay.style.display = 'none';
+            // Fallback generation if network/CORS blocks script response but saves successfully
+            generatedRegId = selectedStudent['Registration ID'] || `REC-${Math.floor(100000 + Math.random() * 900000)}`;
+            renderReceiptView(generatedRegId);
+        });
+    }
+
+    function renderReceiptView(regId) {
+        const fName = document.getElementById('val-father-name').value.trim().toUpperCase();
+        const mName = document.getElementById('val-mother-name').value.trim().toUpperCase();
+        const inst = selectedStudent['Institution'].trim();
+        const fineArtsClass = (selectedStudent['Appearing Fine Arts Class'] || '').trim();
+        const feeAmount = getFeeAmount();
+
+        document.getElementById('rec-inst').textContent = inst;
+        document.getElementById('rec-regid').textContent = regId;
+        document.getElementById('rec-time').textContent = new Date().toLocaleString();
+        document.getElementById('rec-name').textContent = document.getElementById('val-student-name').value.trim().toUpperCase();
+        document.getElementById('rec-father').textContent = fName;
+        document.getElementById('rec-mother').textContent = mName;
+        document.getElementById('rec-mobile').textContent = document.getElementById('val-mobile').value;
+        document.getElementById('rec-sub').textContent = fineArtsClass;
+        document.getElementById('rec-fee-num1').textContent = feeAmount;
+        document.getElementById('rec-fee-num2').textContent = feeAmount;
+        document.getElementById('rec-in-words').textContent = convertNumberToWords(feeAmount);
+        document.getElementById('rec-barcode-text').textContent = regId;
+
+        JsBarcode("#real-barcode-canvas", regId, {
+            format: "CODE128",
+            lineColor: "#000000",
+            width: 2,
+            height: 50,
+            displayValue: false
+        });
+
+        switchScreen('screen-4');
+        document.getElementById('timer-display').style.display = 'none';
+        if(timerInterval) clearInterval(timerInterval);
+    }
+
+    function downloadReceiptImage() {
+        const receiptElement = document.getElementById('receipt-card');
+        html2canvas(receiptElement, { scale: 3 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Exam_Receipt_${generatedRegId}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+</script>
+
 </body>
 </html>
