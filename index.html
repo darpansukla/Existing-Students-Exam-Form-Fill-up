@@ -560,21 +560,14 @@
     <!-- Content Area -->
     <div class="content-area">
 
-        <!-- SCREEN 1: Institution & Student Search -->
+        <!-- SCREEN 1: Mobile-Only Strict Student Search -->
         <div id="screen-1" class="screen active">
-            <h2>Select Institution</h2>
-            <p class="subtitle">Choose your school to start exam form fillup</p>
+            <h2>Find Student Record</h2>
+            <p class="subtitle">Enter your registered 10-digit mobile number to search</p>
             
-            <div class="form-group">
-                <label>Institution Name</label>
-                <select id="select-institution">
-                    <option value="">-- Select Institution --</option>
-                </select>
-            </div>
-
-            <div class="form-group" id="search-group" style="display:none;">
-                <label>Search Student First Name *</label>
-                <input type="text" id="search-name-input" placeholder="Type first name" class="uppercase-input">
+            <div class="form-group" id="search-group">
+                <label>Mobile / WhatsApp Number *</label>
+                <input type="text" id="search-name-input" placeholder="Type 10-digit mobile number" maxlength="10" inputmode="numeric">
                 <div id="search-results" class="search-results"></div>
             </div>
 
@@ -896,56 +889,31 @@
             download: true,
             header: true,
             complete: function(results) {
-                studentsData = results.data.filter(row => row['Institution'] && row['Student Name']);
-                populateInstitutions();
-            }
-        });
-    }
-
-    function populateInstitutions() {
-        const institutions = [...new Set(studentsData.map(item => item['Institution'].trim()))];
-        const select = document.getElementById('select-institution');
-        institutions.forEach(inst => {
-            if(inst) {
-                let opt = document.createElement('option');
-                opt.value = inst;
-                opt.textContent = inst;
-                select.appendChild(opt);
+                studentsData = results.data.filter(row => row['Student Name']);
             }
         });
     }
 
     function setupEventListeners() {
-        const instSelect = document.getElementById('select-institution');
         const searchInput = document.getElementById('search-name-input');
-        const searchGroup = document.getElementById('search-group');
-
-        instSelect.addEventListener('change', (e) => {
-            if(e.target.value) {
-                searchGroup.style.display = 'block';
-                searchInput.value = '';
-                document.getElementById('search-results').style.display = 'none';
-            } else {
-                searchGroup.style.display = 'none';
-            }
-        });
 
         searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.trim().toUpperCase();
-            const inst = instSelect.value;
+            // Restrict input to numbers only, max 10 digits
+            let query = e.target.value.replace(/\D/g, '').slice(0, 10);
+            e.target.value = query;
+
             const resultsBox = document.getElementById('search-results');
             resultsBox.innerHTML = '';
 
-            if(query.length < 3) {
+            // STRICT PRIVACY: Only search if exactly 10 digits are entered
+            if(!query || query.length < 10) {
                 resultsBox.style.display = 'none';
                 return;
             }
 
             const matches = studentsData.filter(s => {
-                if(s['Institution'].trim() !== inst) return false;
-                const fullName = s['Student Name'].toUpperCase().trim();
-                const firstName = fullName.split(' ')[0];
-                return firstName === query;
+                const mobile = (s['Mobile (WhatsApp)'] || '').trim();
+                return mobile === query;
             });
 
             if(matches.length > 0) {
@@ -953,10 +921,10 @@
                 matches.forEach(m => {
                     let div = document.createElement('div');
                     div.className = 'search-item';
-                    div.textContent = m['Student Name'];
+                    div.textContent = `Mobile Verified: ${m['Mobile (WhatsApp)']} - ${m['Institution'] || ''}`;
                     div.onclick = () => {
                         selectedStudent = m;
-                        searchInput.value = m['Student Name'];
+                        searchInput.value = m['Mobile (WhatsApp)'];
                         resultsBox.style.display = 'none';
                         document.getElementById('btn-to-screen-2').disabled = false;
                     };
@@ -1235,7 +1203,6 @@
         })
         .catch(error => {
             loadingOverlay.style.display = 'none';
-            // Fallback generation if network/CORS blocks script response but saves successfully
             generatedRegId = selectedStudent['Registration ID'] || `REC-${Math.floor(100000 + Math.random() * 900000)}`;
             renderReceiptView(generatedRegId);
         });
