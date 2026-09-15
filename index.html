@@ -566,7 +566,7 @@
             <p class="subtitle">Enter your registered 10-digit mobile number to search</p>
             
             <div class="form-group" id="search-group">
-                <label> Registered Mobile Number *</label>
+                <label>Registered Mobile Number *</label>
                 <input type="text" id="search-name-input" placeholder="Type 10-digit mobile number" maxlength="10" inputmode="numeric">
                 <div id="search-results" class="search-results"></div>
             </div>
@@ -921,7 +921,10 @@
                 matches.forEach(m => {
                     let div = document.createElement('div');
                     div.className = 'search-item';
-                    div.textContent = `Mobile Verified: ${m['Mobile (WhatsApp)']} - ${m['Institution'] || ''}`;
+                    
+                    // Displays ONLY Student's Full Name and School Name
+                    div.textContent = `${m['Student Name']} — ${m['Institution'] || ''}`;
+                    
                     div.onclick = () => {
                         selectedStudent = m;
                         searchInput.value = m['Mobile (WhatsApp)'];
