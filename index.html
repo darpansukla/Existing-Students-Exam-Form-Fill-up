@@ -181,6 +181,8 @@
             transition: var(--transition);
             text-align: center;
             margin-top: 12px;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn:active {
@@ -238,8 +240,9 @@
             height: 110px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid var(--border-color);
+            border: 4px solid #FFFFFF;
             background: #E5E5EA;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         /* Alive / Late Toggle Switch */
@@ -349,25 +352,6 @@
             padding: 8px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
-        }
-
-        .payment-links {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .pay-app-btn {
-            padding: 12px 6px;
-            font-size: 13px;
-            font-weight: 600;
-            background: #FFFFFF;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--text-primary);
-            text-align: center;
         }
 
         /* Success Green Tick Animation Styles */
@@ -580,7 +564,12 @@
             <p class="subtitle">Verify and update your details below</p>
 
             <div class="photo-preview-container">
-                <img id="preview-photo" class="photo-preview" src="" alt="Student Photo">
+                <div style="position: relative; display: inline-block;">
+                    <img id="preview-photo" class="photo-preview" src="" alt="Student Photo">
+                    <div style="position: absolute; bottom: 2px; right: 2px; width: 32px; height: 32px; background: #34C759; border-radius: 50%; border: 3px solid #FFFFFF; display: flex; align-items: center; justify-content: center; color: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                        <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: #FFFFFF; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -742,13 +731,10 @@
                     <img id="upi-qr" src="" alt="UPI QR Code" style="width:100%; height:100%; object-fit:contain;">
                 </div>
                 
-                <p style="font-size:14px; font-weight:600;">UPI ID: <span id="upi-id-text" style="color:var(--accent-color);">sdarpan128@oksbi</span></p>
+                <p style="font-size:14px; font-weight:600; margin-bottom: 12px;">UPI ID: <span id="upi-id-text" style="color:var(--accent-color);">sdarpan128@oksbi</span></p>
                 
-                <div class="payment-links">
-                    <a href="#" id="gpay-link" class="pay-app-btn">Google Pay</a>
-                    <a href="#" id="phonepe-link" class="pay-app-btn">PhonePe</a>
-                    <a href="#" id="paytm-link" class="pay-app-btn">Paytm</a>
-                </div>
+                <!-- Single Unified UPI App Button -->
+                <a href="#" id="upi-pay-link" class="btn" style="margin-top: 0;">Pay via UPI App</a>
             </div>
 
             <div class="form-group">
@@ -780,7 +766,7 @@
                 <div class="rec-top-title">EXAMINATION FEE RECEIPT</div>
                 <div class="rec-sub-title">ANNUAL PRACTICAL FINE ARTS (PAINTING) EXAMINATION</div>
                 <div class="rec-inst-title" id="rec-inst"></div>
-                <div class="rec-session">Session 2026-27 | Darpan Sukla</div>
+                <div class="rec-session">Session 2026-27</div>
                 
                 <div class="rec-line"></div>
                 
@@ -898,14 +884,12 @@
         const searchInput = document.getElementById('search-name-input');
 
         searchInput.addEventListener('input', (e) => {
-            // Restrict input to numbers only, max 10 digits
             let query = e.target.value.replace(/\D/g, '').slice(0, 10);
             e.target.value = query;
 
             const resultsBox = document.getElementById('search-results');
             resultsBox.innerHTML = '';
 
-            // STRICT PRIVACY: Only search if exactly 10 digits are entered
             if(!query || query.length < 10) {
                 resultsBox.style.display = 'none';
                 return;
@@ -921,8 +905,6 @@
                 matches.forEach(m => {
                     let div = document.createElement('div');
                     div.className = 'search-item';
-                    
-                    // Displays ONLY Student's Full Name and School Name
                     div.textContent = `${m['Student Name']} — ${m['Institution'] || ''}`;
                     
                     div.onclick = () => {
@@ -1112,10 +1094,7 @@
         const upiLinkString = `upi://pay?pa=${UPI_ID}&pn=Darpan%20Exam&am=${feeAmount}&cu=INR&tn=${remark}`;
 
         document.getElementById('upi-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiLinkString)}`;
-
-        document.getElementById('gpay-link').href = upiLinkString;
-        document.getElementById('phonepe-link').href = upiLinkString;
-        document.getElementById('paytm-link').href = upiLinkString;
+        document.getElementById('upi-pay-link').href = upiLinkString;
     }
 
     function checkPaymentReady() {
