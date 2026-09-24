@@ -228,6 +228,44 @@
             background: #F2F2F7;
         }
 
+        /* Informational Search Item (Non-clickable for registration) */
+        .search-item.info-only {
+            cursor: default;
+            background: #FAFAFC;
+            color: var(--text-secondary);
+        }
+        .search-item.info-only:hover {
+            background: #FAFAFC;
+        }
+
+        /* Divider / Toggle Text for Search Modes */
+        .search-divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .search-divider span {
+            background: var(--card-bg);
+            padding: 0 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .search-divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: var(--border-color);
+            z-index: 0;
+        }
+
         /* Photo Preview */
         .photo-preview-container {
             display: flex;
@@ -544,18 +582,32 @@
     <!-- Content Area -->
     <div class="content-area">
 
-        <!-- SCREEN 1: Mobile-Only Strict Student Search -->
+        <!-- SCREEN 1: Mobile-Only Strict Student Search & Name Search Recovery Option -->
         <div id="screen-1" class="screen active">
             <h2>Find Student Record</h2>
-            <p class="subtitle">Enter your registered 10-digit mobile number to search</p>
+            <p class="subtitle">Enter your registered mobile number to proceed with registration or form fillup</p>
             
+            <!-- Primary Search: By Mobile Number (Mandatory for registration & form fillup) -->
             <div class="form-group" id="search-group">
-                <label>Registered Mobile Number *</label>
+                <label>Search by Registered Mobile Number * (Required for Form Fillup)</label>
                 <input type="text" id="search-name-input" placeholder="Type 10-digit mobile number" maxlength="10" inputmode="numeric">
                 <div id="search-results" class="search-results"></div>
             </div>
 
-            <button class="btn" id="btn-to-screen-2" disabled>Continue</button>
+            <!-- Continue button is strictly tied to mobile number validation -->
+            <button class="btn" id="btn-to-screen-2" disabled>Continue to Form Fillup</button>
+
+            <div class="search-divider">
+                <span>OR CAN'T REMEMBER MOBILE NO?</span>
+            </div>
+
+            <!-- Alternative Search: By Student Name (Information Only - No Registration/Form Fillup allowed) -->
+            <div class="form-group" id="search-by-name-group">
+                <label>Search by Student Name (Forgot Mobile No?) *</label>
+                <input type="text" id="search-by-student-name-input" placeholder="Type student name to get mobile info only" class="uppercase-input">
+                <div id="search-by-name-results" class="search-results"></div>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 6px; font-style: italic;">Note: This box is strictly for looking up your registered mobile number. Registration and form fillup cannot be performed from here.</p>
+            </div>
         </div>
 
         <!-- SCREEN 2: Edit & Verify Form Details -->
@@ -882,16 +934,24 @@
 
     function setupEventListeners() {
         const searchInput = document.getElementById('search-name-input');
+        const searchByNameInput = document.getElementById('search-by-student-name-input');
+        const resultsBox = document.getElementById('search-results');
+        const resultsByNameBox = document.getElementById('search-by-name-results');
+        const continueBtn = document.getElementById('btn-to-screen-2');
 
+        // 1. Search by Mobile Number Input Listener (Allows Form Fillup & Registration)
         searchInput.addEventListener('input', (e) => {
             let query = e.target.value.replace(/\D/g, '').slice(0, 10);
             e.target.value = query;
+            resultsByNameBox.style.display = 'none';
+            searchByNameInput.value = '';
 
-            const resultsBox = document.getElementById('search-results');
             resultsBox.innerHTML = '';
 
             if(!query || query.length < 10) {
                 resultsBox.style.display = 'none';
+                continueBtn.disabled = true;
+                selectedStudent = null;
                 return;
             }
 
@@ -911,16 +971,60 @@
                         selectedStudent = m;
                         searchInput.value = m['Mobile (WhatsApp)'];
                         resultsBox.style.display = 'none';
-                        document.getElementById('btn-to-screen-2').disabled = false;
+                        continueBtn.disabled = false; // Enables registration/form fillup
                     };
                     resultsBox.appendChild(div);
                 });
             } else {
                 resultsBox.style.display = 'none';
+                continueBtn.disabled = true;
+                selectedStudent = null;
             }
         });
 
-        document.getElementById('btn-to-screen-2').addEventListener('click', () => {
+        // 2. Search by Student Name Input Listener (Strictly Information Only - No Registration or Continue button)
+        searchByNameInput.addEventListener('input', (e) => {
+            let query = e.target.value.trim().toLowerCase();
+            searchInput.value = '';
+            resultsBox.style.display = 'none';
+            continueBtn.disabled = true;
+            selectedStudent = null;
+
+            resultsByNameBox.innerHTML = '';
+
+            if(!query || query.length < 2) {
+                resultsByNameBox.style.display = 'none';
+                return;
+            }
+
+            const matches = studentsData.filter(s => {
+                const name = (s['Student Name'] || '').toLowerCase();
+                return name.includes(query);
+            });
+
+            if(matches.length > 0) {
+                resultsByNameBox.style.display = 'block';
+                matches.forEach(m => {
+                    let div = document.createElement('div');
+                    // Add info-only class so users know they can't click it for registration
+                    div.className = 'search-item info-only';
+                    
+                    // Masking last 4 digits of the mobile number for security/privacy
+                    let fullMobile = (m['Mobile (WhatsApp)'] || '').trim();
+                    let maskedMobile = fullMobile.length >= 10 ? fullMobile.slice(0, 6) + 'XXXX' : 'XXXXXX';
+                    
+                    // Display STRICTLY ONLY name and mobile no (with last 4 digits hidden) and nothing else
+                    div.textContent = `${m['Student Name']} — ${maskedMobile}`;
+                    
+                    // Explicitly NOT adding any onclick action to allow registration/form fillup from this section
+                    resultsByNameBox.appendChild(div);
+                });
+            } else {
+                resultsByNameBox.style.display = 'none';
+            }
+        });
+
+        continueBtn.addEventListener('click', () => {
             if(selectedStudent) {
                 populateScreen2();
                 switchScreen('screen-2');
