@@ -601,12 +601,12 @@
                 <span>OR CAN'T REMEMBER MOBILE NO?</span>
             </div>
 
-            <!-- Alternative Search: By Student Name (Information Only - No Registration/Form Fillup allowed) -->
+            <!-- Alternative Search: By Student Name (Information Only - Exact First Name Match, No Registration/Form Fillup allowed) -->
             <div class="form-group" id="search-by-name-group">
                 <label>Search by Student Name (Forgot Mobile No?) *</label>
-                <input type="text" id="search-by-student-name-input" placeholder="Type student name to get mobile info only" class="uppercase-input">
+                <input type="text" id="search-by-student-name-input" placeholder="Type exact first name for mobile lookup" class="uppercase-input">
                 <div id="search-by-name-results" class="search-results"></div>
-                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 6px; font-style: italic;">Note: This box is strictly for looking up your registered mobile number. Registration and form fillup cannot be performed from here.</p>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 6px; font-style: italic;">Note: Type the exact first name. Only an exact match will display the registered mobile info. Registration and form fillup cannot be performed from here.</p>
             </div>
         </div>
 
@@ -982,7 +982,7 @@
             }
         });
 
-        // 2. Search by Student Name Input Listener (Strictly Information Only - No Registration or Continue button)
+        // 2. Search by Student Name Input Listener (Strictly Information Only - Exact First Name Match Only)
         searchByNameInput.addEventListener('input', (e) => {
             let query = e.target.value.trim().toLowerCase();
             searchInput.value = '';
@@ -997,9 +997,14 @@
                 return;
             }
 
+            // Filter for EXACT match of the first name (or exact full name entry matching the query)
             const matches = studentsData.filter(s => {
-                const name = (s['Student Name'] || '').toLowerCase();
-                return name.includes(query);
+                const fullName = (s['Student Name'] || '').trim().toLowerCase();
+                const nameParts = fullName.split(/\s+/);
+                const firstName = nameParts[0] || '';
+                
+                // Matches only if the typed query is an exact match to the student's first name OR their entire full name
+                return query === firstName || query === fullName;
             });
 
             if(matches.length > 0) {
@@ -1016,7 +1021,7 @@
                     // Display STRICTLY ONLY name and mobile no (with last 4 digits hidden) and nothing else
                     div.textContent = `${m['Student Name']} — ${maskedMobile}`;
                     
-                    // Explicitly NOT adding any onclick action to allow registration/form fillup from this section
+                    // Explicitly NOT adding any action to allow registration/form fillup from this section
                     resultsByNameBox.appendChild(div);
                 });
             } else {
