@@ -228,7 +228,6 @@
             background: #F2F2F7;
         }
 
-        /* Informational Search Item (Non-clickable for registration) */
         .search-item.info-only {
             cursor: default;
             background: #FAFAFC;
@@ -238,7 +237,6 @@
             background: #FAFAFC;
         }
 
-        /* Divider / Toggle Text for Search Modes */
         .search-divider {
             text-align: center;
             margin: 20px 0;
@@ -283,7 +281,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
-        /* Alive / Late Toggle Switch */
+        /* Status Toggle Switch */
         .status-toggle-wrapper {
             display: flex;
             align-items: center;
@@ -572,6 +570,25 @@
     <p id="loading-text" style="font-weight: 600; font-size: 15px; color: var(--text-primary);">Submitting details & uploading documents...</p>
 </div>
 
+<!-- Clean Payment Instruction Modal Popup -->
+<div id="payment-reminder-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: #FFFFFF; width: 100%; max-width: 380px; border-radius: 20px; padding: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <div style="width: 50px; height: 50px; background: rgba(255,59,48,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; color: var(--error-color);">
+            <svg viewBox="0 0 24 24" style="width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        </div>
+        <h3 style="font-size: 18px; font-weight: 700; color: var(--error-color); margin-bottom: 8px;">Take a Screenshot of Successful Payment</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">Please capture your successful payment screen to upload as proof.</p>
+        
+        <div style="background: #FFF5F5; border: 1px solid #FEB2B2; border-radius: 12px; padding: 14px; text-align: left; font-size: 13px; margin-bottom: 20px; color: #9B2C2C;">
+            <p style="font-weight: 700; margin-bottom: 6px;">How to take a screenshot:</p>
+            <p style="margin-bottom: 4px;">• <strong>Android:</strong> Press <span style="font-weight:600;">Power + Volume Down</span> together.</p>
+            <p>• <strong>iPhone:</strong> Press <span style="font-weight:600;">Side Button + Volume Up</span> together.</p>
+        </div>
+
+        <button class="btn" onclick="closeReminderAndProceed()" style="margin-top: 0;">I Understand, Proceed to Payment</button>
+    </div>
+</div>
+
 <div class="mobile-container">
     <!-- Header -->
     <div class="app-header">
@@ -587,21 +604,18 @@
             <h2>Find Student Record</h2>
             <p class="subtitle">Enter your registered mobile number to proceed with registration or form fillup</p>
             
-            <!-- Primary Search: By Mobile Number (Mandatory for registration & form fillup) -->
             <div class="form-group" id="search-group">
                 <label>Search by Registered Mobile Number * (Required for Form Fillup)</label>
                 <input type="text" id="search-name-input" placeholder="Type 10-digit mobile number" maxlength="10" inputmode="numeric">
                 <div id="search-results" class="search-results"></div>
             </div>
 
-            <!-- Continue button is strictly tied to mobile number validation -->
             <button class="btn" id="btn-to-screen-2" disabled>Continue to Form Fillup</button>
 
             <div class="search-divider">
                 <span>OR CAN'T REMEMBER MOBILE NO?</span>
             </div>
 
-            <!-- Alternative Search: By Student Name (Information Only - Exact First Name Match, No Registration/Form Fillup allowed) -->
             <div class="form-group" id="search-by-name-group">
                 <label>Search by Student Name (Forgot Mobile No?) *</label>
                 <input type="text" id="search-by-student-name-input" placeholder="Type exact first name for mobile lookup" class="uppercase-input">
@@ -634,7 +648,6 @@
                 <input type="text" id="val-student-name" class="uppercase-input">
             </div>
 
-            <!-- Father Details with On/Off Toggle -->
             <div class="form-group">
                 <label>Father's Name</label>
                 <div class="status-toggle-wrapper">
@@ -650,7 +663,6 @@
                 <input type="text" id="val-father-name" class="uppercase-input">
             </div>
 
-            <!-- Mother Details with On/Off Toggle -->
             <div class="form-group">
                 <label>Mother's Name</label>
                 <div class="status-toggle-wrapper">
@@ -736,7 +748,6 @@
                 <input type="text" id="val-fine-class" readonly>
             </div>
 
-            <!-- Conditional Uploads for Visharad -->
             <div id="visharad-uploads" style="display:none; background:#F2F2F7; padding:12px; border-radius:12px; margin-bottom:16px;">
                 <p style="font-size:14px; font-weight:600; color:var(--error-color); margin-bottom:8px;">Mandatory Documents for Visharad Students</p>
                 
@@ -785,7 +796,6 @@
                 
                 <p style="font-size:14px; font-weight:600; margin-bottom: 12px;">UPI ID: <span id="upi-id-text" style="color:var(--accent-color);">sdarpan128@oksbi</span></p>
                 
-                <!-- Single Unified UPI App Button -->
                 <a href="#" id="upi-pay-link" class="btn" style="margin-top: 0;">Pay via UPI App</a>
             </div>
 
@@ -803,7 +813,6 @@
 
         <!-- SCREEN 4: Receipt Confirmation -->
         <div id="screen-4" class="screen">
-            <!-- Green Tick Animation & Success Message Banner -->
             <div class="success-banner">
                 <div class="success-checkmark">
                     <svg viewBox="0 0 24 24">
@@ -849,7 +858,6 @@
                 
                 <div class="rec-row" style="font-size:11px; margin-top:4px; font-style:italic;"><span>In Words:</span><span id="rec-in-words"></span></div>
                 
-                <!-- Real Standard Barcode Canvas -->
                 <div class="barcode-container">
                     <canvas id="real-barcode-canvas"></canvas>
                     <div style="font-size:10px; font-weight:bold; margin-top:2px; letter-spacing:2px;" id="rec-barcode-text"></div>
@@ -883,7 +891,7 @@
     let studentsData = [];
     let selectedStudent = null;
     let timerInterval = null;
-    let timeLeft = 600; // 10 Minutes timer strictly for payment
+    let timeLeft = 600;
     let generatedRegId = "";
 
     let fileBase64Data = {
@@ -939,7 +947,6 @@
         const resultsByNameBox = document.getElementById('search-by-name-results');
         const continueBtn = document.getElementById('btn-to-screen-2');
 
-        // 1. Search by Mobile Number Input Listener (Allows Form Fillup & Registration)
         searchInput.addEventListener('input', (e) => {
             let query = e.target.value.replace(/\D/g, '').slice(0, 10);
             e.target.value = query;
@@ -971,7 +978,7 @@
                         selectedStudent = m;
                         searchInput.value = m['Mobile (WhatsApp)'];
                         resultsBox.style.display = 'none';
-                        continueBtn.disabled = false; // Enables registration/form fillup
+                        continueBtn.disabled = false;
                     };
                     resultsBox.appendChild(div);
                 });
@@ -982,7 +989,6 @@
             }
         });
 
-        // 2. Search by Student Name Input Listener (Strictly Information Only - Exact First Name Match Only)
         searchByNameInput.addEventListener('input', (e) => {
             let query = e.target.value.trim().toLowerCase();
             searchInput.value = '';
@@ -997,13 +1003,10 @@
                 return;
             }
 
-            // Filter for EXACT match of the first name (or exact full name entry matching the query)
             const matches = studentsData.filter(s => {
                 const fullName = (s['Student Name'] || '').trim().toLowerCase();
                 const nameParts = fullName.split(/\s+/);
                 const firstName = nameParts[0] || '';
-                
-                // Matches only if the typed query is an exact match to the student's first name OR their entire full name
                 return query === firstName || query === fullName;
             });
 
@@ -1011,17 +1014,12 @@
                 resultsByNameBox.style.display = 'block';
                 matches.forEach(m => {
                     let div = document.createElement('div');
-                    // Add info-only class so users know they can't click it for registration
                     div.className = 'search-item info-only';
                     
-                    // Masking last 4 digits of the mobile number for security/privacy
                     let fullMobile = (m['Mobile (WhatsApp)'] || '').trim();
                     let maskedMobile = fullMobile.length >= 10 ? fullMobile.slice(0, 6) + 'XXXX' : 'XXXXXX';
                     
-                    // Display STRICTLY ONLY name and mobile no (with last 4 digits hidden) and nothing else
                     div.textContent = `${m['Student Name']} — ${maskedMobile}`;
-                    
-                    // Explicitly NOT adding any action to allow registration/form fillup from this section
                     resultsByNameBox.appendChild(div);
                 });
             } else {
@@ -1174,6 +1172,13 @@
             return;
         }
 
+        // Show the clean screenshot instructions popup first
+        document.getElementById('payment-reminder-modal').style.display = 'flex';
+    }
+
+    function closeReminderAndProceed() {
+        // Hide modal and transition to payment gateway screen
+        document.getElementById('payment-reminder-modal').style.display = 'none';
         setupPaymentInfo();
         switchScreen('screen-3');
     }
