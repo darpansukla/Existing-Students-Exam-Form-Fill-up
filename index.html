@@ -570,22 +570,21 @@
     <p id="loading-text" style="font-weight: 600; font-size: 15px; color: var(--text-primary);">Submitting details & uploading documents...</p>
 </div>
 
-<!-- Clean Payment Instruction Modal Popup -->
+<!-- Updated Screenshot Instruction Modal Popup -->
 <div id="payment-reminder-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; padding: 20px;">
-    <div style="background: #FFFFFF; width: 100%; max-width: 380px; border-radius: 20px; padding: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-        <div style="width: 50px; height: 50px; background: rgba(255,59,48,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; color: var(--error-color);">
-            <svg viewBox="0 0 24 24" style="width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-        </div>
-        <h3 style="font-size: 18px; font-weight: 700; color: var(--error-color); margin-bottom: 8px;">Take a Screenshot of Successful Payment</h3>
-        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">Please capture your successful payment screen to upload as proof.</p>
+    <div style="background: #FFFFFF; width: 100%; max-width: 410px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;">
         
-        <div style="background: #FFF5F5; border: 1px solid #FEB2B2; border-radius: 12px; padding: 14px; text-align: left; font-size: 13px; margin-bottom: 20px; color: #9B2C2C;">
-            <p style="font-weight: 700; margin-bottom: 6px;">How to take a screenshot:</p>
-            <p style="margin-bottom: 4px;">• <strong>Android:</strong> Press <span style="font-weight:600;">Power + Volume Down</span> together.</p>
-            <p>• <strong>iPhone:</strong> Press <span style="font-weight:600;">Side Button + Volume Up</span> together.</p>
+        <!-- Screenshot Image Banner -->
+        <div style="background: #F8F9FA; padding: 16px 16px 0 16px;">
+            <img src="screenshot_2.png" alt="screenshot" style="width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
         </div>
 
-        <button class="btn" onclick="closeReminderAndProceed()" style="margin-top: 0;">I Understand, Proceed to Payment</button>
+        <div style="padding: 20px 24px 24px 24px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">screenshot</h3>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">Please follow the guide above to capture your successful payment screen before uploading.</p>
+            
+            <button class="btn" onclick="closeReminderAndProceed()" style="margin-top: 0;">I Understand, Proceed to Payment</button>
+        </div>
     </div>
 </div>
 
@@ -1172,7 +1171,7 @@
             return;
         }
 
-        // Show the clean screenshot instructions popup first
+        // Show the updated screenshot instruction modal popup
         document.getElementById('payment-reminder-modal').style.display = 'flex';
     }
 
